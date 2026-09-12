@@ -162,7 +162,7 @@ function showCaptured(dataUrl, ms, usedDevice, fellBack) {
   document.getElementById('facingBtn').style.display = 'none';
   const stat = document.getElementById('resultStat');
   stat.classList.toggle('fallback', fellBack);
-  stat.textContent = '處理耗時：' + ms.toFixed(0) + ' ms' + (fellBack ? '（GPU 不支援，已自動退回 CPU）' : '');
+  stat.textContent = '處理耗時：' + ms.toFixed(0) + ' ms' + (fellBack ? '（已自動切換備援模式）' : '');
   setStatus(false);
 }
 
@@ -224,24 +224,31 @@ function makeProgressHandler(fillEl, pctEl) {
   };
 }
 
-async function runRemoveBackground(blob, device, onProgress) {
-  return removeBackground(blob, {
+// 模型／wasm 檔案優先從自己網站同源的 /ai-models/ 讀（見 public/ai-models/README.md），
+// 不依賴 staticimgly.com 這個外部 CDN。檔案還沒放進去、或本機檔案有問題時，
+// 下面的 attempt 清單會自動退回原本連線下載 CDN 的行為，不會整個壞掉。
+const LOCAL_MODEL_PATH = new URL('ai-models/', window.location.href).toString();
+
+async function runRemoveBackground(blob, device, onProgress, publicPath) {
+  const opts = {
     model: modelChoice,
     device,
     output: { type: 'foreground', format: 'image/png' },
     progress: onProgress,
     debug: false
-  });
+  };
+  if (publicPath) opts.publicPath = publicPath;
+  return removeBackground(blob, opts);
 }
 
 function hasWebGPU() {
   return typeof navigator !== 'undefined' && !!navigator.gpu;
 }
 
-// 有些裝置（例如還沒升到 iOS 18 的 iPhone/iPad）WebGPU 支援不完整，
+// 有些裝置（例如 WebGPU 支援不完整的 Safari）或連不到模型伺服器的網路環境，
 // 不會乾脆地「失敗」，而是卡住不回應、進度條永遠停在 0%。
 // 這裡用「多久沒有新進度就當作卡住」來偵測，卡住就直接放棄重試，而不是讓使用者一直空等。
-function runWithStallGuard(blob, device, onProgress, stallMs, hardCapMs) {
+function runWithStallGuard(blob, device, onProgress, publicPath, stallMs, hardCapMs) {
   return new Promise((resolve, reject) => {
     let settled = false;
     let stallTimer, hardTimer;
@@ -252,7 +259,7 @@ function runWithStallGuard(blob, device, onProgress, stallMs, hardCapMs) {
     };
     hardTimer = setTimeout(() => finish(reject, new Error('處理時間過長')), hardCapMs);
     armStall();
-    runRemoveBackground(blob, device, (...args) => { armStall(); onProgress(...args); })
+    runRemoveBackground(blob, device, (...args) => { armStall(); onProgress(...args); }, publicPath)
       .then((v) => finish(resolve, v), (e) => finish(reject, e));
   });
 }
@@ -274,30 +281,40 @@ async function captureAndProcess() {
   drawVideoCover(hiCtx, video, CW, CH);
   const blob = await canvasToBlob(hiCanvas);
 
-  let usedDevice = (deviceChoice === 'gpu' && !hasWebGPU()) ? 'cpu' : deviceChoice;
-  let fellBack = usedDevice !== deviceChoice;
+  const initialDevice = (deviceChoice === 'gpu' && !hasWebGPU()) ? 'cpu' : deviceChoice;
+  const attempts = [
+    { device: initialDevice, publicPath: LOCAL_MODEL_PATH, stallMs: 8000, hardCapMs: 60000 }
+  ];
+  if (initialDevice === 'gpu') {
+    attempts.push({ device: 'cpu', publicPath: LOCAL_MODEL_PATH, stallMs: 8000, hardCapMs: 60000, msg: 'GPU 加速沒有回應，改用 CPU 重試…' });
+  }
+  attempts.push({ device: 'cpu', publicPath: undefined, stallMs: 10000, hardCapMs: 120000, msg: '本機模型資源無法使用，改連線下載模型…' });
+
+  let usedDevice = attempts[0].device;
+  let fellBack = false;
   let resultBlob;
-  try {
-    resultBlob = await runWithStallGuard(blob, usedDevice, onProgress, 10000, 90000);
-  } catch (err) {
-    if (usedDevice === 'gpu') {
-      usedDevice = 'cpu';
+  let lastErr;
+  for (let i = 0; i < attempts.length; i++) {
+    const a = attempts[i];
+    if (i > 0) {
       fellBack = true;
-      veilText.textContent = 'GPU 加速沒有回應，改用 CPU 重試…';
+      veilText.textContent = a.msg;
       progressFill.style.width = '0%';
       progressPct.textContent = '0%';
-      try {
-        resultBlob = await runWithStallGuard(blob, 'cpu', onProgress, 10000, 120000);
-      } catch (err2) {
-        veil.style.display = 'none';
-        alert('去背失敗：' + err2.message + '\n（請確認網路可以連線；第一次使用需要下載 AI 模型，網路較慢時請重試一次）');
-        return;
-      }
-    } else {
-      veil.style.display = 'none';
-      alert('去背失敗：' + err.message + '\n（請確認網路可以連線；第一次使用需要下載 AI 模型，網路較慢時請重試一次）');
-      return;
     }
+    try {
+      resultBlob = await runWithStallGuard(blob, a.device, onProgress, a.publicPath, a.stallMs, a.hardCapMs);
+      usedDevice = a.device;
+      lastErr = null;
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (lastErr) {
+    veil.style.display = 'none';
+    alert('去背失敗：' + lastErr.message + '\n（請確認網路可以連線；第一次使用需要下載 AI 模型，網路較慢時請重試一次）');
+    return;
   }
 
   const fgImg = new Image();
