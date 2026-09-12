@@ -80,8 +80,16 @@ const FRAME_THEMES = [
   { colors: ['#d8d2c6', '#a89e8c'], text: '#2a241c' }  // 摩登展場
 ];
 
+// 量文字寬度，超過可用寬度就把字級縮小到剛好塞得下，避免文字被框裁掉/跑出邊界。
+function fitFontPx(ctx, text, maxWidth, startPx, weight) {
+  ctx.font = weight + ' ' + startPx + 'px "Noto Sans TC", sans-serif';
+  const w = ctx.measureText(text).width;
+  return w > maxWidth ? Math.max(8, Math.floor(startPx * maxWidth / w)) : startPx;
+}
+
 export function buildFrames(w, sceneNames) {
   const h = Math.round(w * FRAME_RATIO);
+  const maxTextWidth = w * 0.88; // 左右各留白，文字不頂邊框
   return FRAME_THEMES.map((theme, i) => {
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
@@ -105,12 +113,16 @@ export function buildFrames(w, sceneNames) {
 
     ctx.fillStyle = theme.text;
     ctx.textAlign = 'center';
-    ctx.font = '700 ' + Math.round(h * 0.22) + 'px "Noto Sans TC", sans-serif';
-    ctx.fillText('NTU 40 週年紀念', w / 2, h * 0.52);
+    const titleText = 'NSO 40 週年紀念';
+    const titleSize = fitFontPx(ctx, titleText, maxTextWidth, Math.round(h * 0.22), '700');
+    ctx.font = '700 ' + titleSize + 'px "Noto Sans TC", sans-serif';
+    ctx.fillText(titleText, w / 2, h * 0.52);
 
     ctx.globalAlpha = 0.75;
-    ctx.font = '400 ' + Math.round(h * 0.12) + 'px "Noto Sans TC", sans-serif';
-    ctx.fillText((sceneNames[i] || '') + ' · 佔位外框，待正式票根美術', w / 2, h * 0.78);
+    const subText = (sceneNames[i] || '') + ' · 佔位外框，待正式票根美術';
+    const subSize = fitFontPx(ctx, subText, maxTextWidth, Math.round(h * 0.12), '400');
+    ctx.font = '400 ' + subSize + 'px "Noto Sans TC", sans-serif';
+    ctx.fillText(subText, w / 2, h * 0.78);
     ctx.globalAlpha = 1;
 
     return { name: sceneNames[i], canvas: c };
