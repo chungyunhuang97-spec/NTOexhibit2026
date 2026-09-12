@@ -162,6 +162,16 @@
     .app{ padding:10px; gap:8px; }
     .scene-btn{ width:54px; height:54px; }
   }
+
+  /* 列印：只印合成後的照片本身，畫面上的按鈕、場景列、標題都不印 */
+  @media print{
+    @page{ margin:0; }
+    body *{ visibility:hidden; }
+    #resultImg{
+      visibility:visible;
+      position:fixed; inset:0; width:100%; height:auto; margin:0;
+    }
+  }
 </style>
 </head>
 <body>
@@ -200,7 +210,7 @@
         <div class="result-stat" id="resultStat">處理耗時：-- ms</div>
         <div class="result-btn-row">
           <button class="btn ghost" id="retakeBtn">重新拍攝</button>
-          <button class="btn primary" id="exportPngBtn">輸出 PNG</button>
+          <button class="btn primary" id="printBtn">列印</button>
         </div>
         <button class="back-to-idle-link" id="backToIdleBtn">回到待機畫面</button>
       </div>
