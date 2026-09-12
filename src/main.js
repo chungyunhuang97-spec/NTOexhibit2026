@@ -1,5 +1,5 @@
 import { removeBackground } from '@imgly/background-removal';
-import { buildScenes } from './scenes.js';
+import { buildScenes, buildFrames, FRAME_RATIO } from './scenes.js';
 
 let W = 640, H = 480;             // 即時預覽解析度，實際比例會依攝影框當下的顯示比例動態校正
 const CAPTURE_SCALE = 2;          // 拍照當下的全解析度輸出倍率
@@ -20,6 +20,7 @@ const hiCtx = hiCanvas.getContext('2d');
 
 const displayCanvas = document.getElementById('displayCanvas');
 let scenes = [];
+let frames = [];
 let activeSceneIndex = 0;
 
 // 拍照當下去背完成的人像（透明背景 PNG），換場景時直接重新合成，不必重跑 AI。
@@ -95,19 +96,39 @@ function ensureScenesBuilt() {
   syncCanvasSizeToStage();
   if (!scenes.length || scenesBuiltFor !== W + 'x' + H) {
     scenes = buildScenes(W, H);
+    frames = buildFrames(W, scenes.map((s) => s.name));
     scenesBuiltFor = W + 'x' + H;
   }
   renderAllSceneUI();
 }
 
-function recompositeWithScene(idx) {
-  const { img, CW, CH } = lastForeground;
+// 給螢幕上看的合成結果（人像＋背景，不含外框）。
+function composeResultDataUrl(idx, fgImg, CW, CH) {
   const out = document.createElement('canvas');
   out.width = CW; out.height = CH;
   const octx = out.getContext('2d');
   octx.drawImage(scenes[idx].canvas, 0, 0, CW, CH);
-  octx.drawImage(img, 0, 0, CW, CH);
-  document.getElementById('resultImg').src = out.toDataURL('image/png');
+  octx.drawImage(fgImg, 0, 0, CW, CH);
+  return out.toDataURL('image/png');
+}
+
+// 給列印用的版本（人像＋背景＋對應主題外框），使用者在前台看不到這個合成過程，
+// 只有實際按下「列印」印出來的東西才會有外框。
+function composePrintDataUrl(idx, fgImg, CW, CH) {
+  const frameCH = Math.round(CW * FRAME_RATIO);
+  const p = document.createElement('canvas');
+  p.width = CW; p.height = CH + frameCH;
+  const pctx = p.getContext('2d');
+  pctx.drawImage(scenes[idx].canvas, 0, 0, CW, CH);
+  pctx.drawImage(fgImg, 0, 0, CW, CH);
+  pctx.drawImage(frames[idx].canvas, 0, CH, CW, frameCH);
+  return p.toDataURL('image/png');
+}
+
+function recompositeWithScene(idx) {
+  const { img, CW, CH } = lastForeground;
+  document.getElementById('resultImg').src = composeResultDataUrl(idx, img, CW, CH);
+  document.getElementById('printImg').src = composePrintDataUrl(idx, img, CW, CH);
 }
 
 function setStatus(live) {
@@ -322,18 +343,15 @@ async function captureAndProcess() {
   await new Promise((resolve, reject) => { fgImg.onload = resolve; fgImg.onerror = reject; fgImg.src = fgUrl; });
   lastForeground = { img: fgImg, CW, CH };
 
-  const out = document.createElement('canvas');
-  out.width = CW; out.height = CH;
-  const octx = out.getContext('2d');
-  octx.drawImage(scenes[activeSceneIndex].canvas, 0, 0, CW, CH);
-  octx.drawImage(fgImg, 0, 0, CW, CH);
+  const resultDataUrl = composeResultDataUrl(activeSceneIndex, fgImg, CW, CH);
+  document.getElementById('printImg').src = composePrintDataUrl(activeSceneIndex, fgImg, CW, CH);
   URL.revokeObjectURL(fgUrl);
 
   const t1 = performance.now();
   progressFill.style.width = '100%';
   progressPct.textContent = '100%';
   veil.style.display = 'none';
-  showCaptured(out.toDataURL('image/png'), t1 - t0, usedDevice, fellBack);
+  showCaptured(resultDataUrl, t1 - t0, usedDevice, fellBack);
 }
 
 document.getElementById('confirmSceneBtn').addEventListener('click', startCamera);

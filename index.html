@@ -57,11 +57,12 @@
   }
   .stage canvas, .stage img.result{ width:100%; height:100%; object-fit:cover; display:block; }
 
-  /* 手機直式時，攝影框改用固定比例置中，避免撐成又高又窄的框，
-     導致相機畫面裁得太緊、看起來像被放大好幾倍 */
+  /* 展場裝置是 iPad 橫向掛載，攝影框固定用橫式比例呈現，
+     手機直拿測試時也一樣（置中、上下留白），跟正式畫面保持一致，
+     同時避免撐成又高又窄的框、把相機畫面裁得像被放大好幾倍 */
   @media (orientation: portrait){
     .app{ justify-content:center; }
-    .stage{ flex:0 1 auto; aspect-ratio: 3/4; max-height:100%; }
+    .stage{ flex:0 1 auto; aspect-ratio: 4/3; max-height:100%; }
   }
 
   .scene-pick{
@@ -163,13 +164,16 @@
     .scene-btn{ width:54px; height:54px; }
   }
 
-  /* 列印：只印合成後的照片本身，畫面上的按鈕、場景列、標題都不印。
+  /* 列印：印出來的不是螢幕上看到的合成照片本身，而是另外合成的
+     「照片＋對應主題外框」版本（#printImg），使用者在前台看不到這個
+     合成過程。畫面上的按鈕、場景列、標題都不印。
      紙張尺寸目前先用證卡/名牌常見的 CR80 尺寸（85.6×54mm）當佔位值，
-     印表機/紙材確定後，改這裡的 size 就好，其他都不用動。 */
+     印表機/紙材確定後，改這裡的 size 就好，其他都不用動；由於列印內容
+     多了外框、比例會比原本的照片更高，屆時也一併重新調整。 */
   @media print{
     @page{ size: 85.6mm 54mm; margin:0; }
     body *{ visibility:hidden; }
-    #resultImg{
+    #printImg{
       visibility:visible;
       position:fixed; inset:0; width:100%; height:100%; object-fit:cover; margin:0;
     }
@@ -200,6 +204,7 @@
 
     <canvas id="displayCanvas" width="640" height="480" style="display:none;"></canvas>
     <img id="resultImg" class="result" style="display:none;" alt="合成結果" />
+    <img id="printImg" style="display:none;" alt="" />
     <div class="mode-tag" id="modeTag" style="display:none;">預覽（原始畫面，未去背）</div>
     <div class="stat-tag" id="statTag" style="display:none;">未拍攝</div>
 
