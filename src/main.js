@@ -234,6 +234,29 @@ async function runRemoveBackground(blob, device, onProgress) {
   });
 }
 
+function hasWebGPU() {
+  return typeof navigator !== 'undefined' && !!navigator.gpu;
+}
+
+// 有些裝置（例如還沒升到 iOS 18 的 iPhone/iPad）WebGPU 支援不完整，
+// 不會乾脆地「失敗」，而是卡住不回應、進度條永遠停在 0%。
+// 這裡用「多久沒有新進度就當作卡住」來偵測，卡住就直接放棄重試，而不是讓使用者一直空等。
+function runWithStallGuard(blob, device, onProgress, stallMs, hardCapMs) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let stallTimer, hardTimer;
+    const finish = (fn, val) => { if (settled) return; settled = true; clearTimeout(stallTimer); clearTimeout(hardTimer); fn(val); };
+    const armStall = () => {
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => finish(reject, new Error('沒有收到任何處理進度，可能是網路連不到 AI 模型伺服器，或這台裝置不支援目前的執行模式')), stallMs);
+    };
+    hardTimer = setTimeout(() => finish(reject, new Error('處理時間過長')), hardCapMs);
+    armStall();
+    runRemoveBackground(blob, device, (...args) => { armStall(); onProgress(...args); })
+      .then((v) => finish(resolve, v), (e) => finish(reject, e));
+  });
+}
+
 async function captureAndProcess() {
   const veil = document.getElementById('processingVeil');
   const veilText = document.getElementById('veilText');
@@ -251,28 +274,28 @@ async function captureAndProcess() {
   drawVideoCover(hiCtx, video, CW, CH);
   const blob = await canvasToBlob(hiCanvas);
 
-  let usedDevice = deviceChoice;
-  let fellBack = false;
+  let usedDevice = (deviceChoice === 'gpu' && !hasWebGPU()) ? 'cpu' : deviceChoice;
+  let fellBack = usedDevice !== deviceChoice;
   let resultBlob;
   try {
-    resultBlob = await runRemoveBackground(blob, deviceChoice, onProgress);
+    resultBlob = await runWithStallGuard(blob, usedDevice, onProgress, 10000, 90000);
   } catch (err) {
-    if (deviceChoice === 'gpu') {
+    if (usedDevice === 'gpu') {
       usedDevice = 'cpu';
       fellBack = true;
-      veilText.textContent = 'GPU 加速不可用，改用 CPU 重試…';
+      veilText.textContent = 'GPU 加速沒有回應，改用 CPU 重試…';
       progressFill.style.width = '0%';
       progressPct.textContent = '0%';
       try {
-        resultBlob = await runRemoveBackground(blob, 'cpu', onProgress);
+        resultBlob = await runWithStallGuard(blob, 'cpu', onProgress, 10000, 120000);
       } catch (err2) {
         veil.style.display = 'none';
-        alert('去背失敗：' + err2.message + '\n（請確認網路可以連線，第一次使用需要下載 AI 模型）');
+        alert('去背失敗：' + err2.message + '\n（請確認網路可以連線；第一次使用需要下載 AI 模型，網路較慢時請重試一次）');
         return;
       }
     } else {
       veil.style.display = 'none';
-      alert('去背失敗：' + err.message + '\n（請確認網路可以連線，第一次使用需要下載 AI 模型）');
+      alert('去背失敗：' + err.message + '\n（請確認網路可以連線；第一次使用需要下載 AI 模型，網路較慢時請重試一次）');
       return;
     }
   }
