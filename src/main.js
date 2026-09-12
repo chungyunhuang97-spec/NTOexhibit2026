@@ -193,6 +193,10 @@ function syncCanvasSizeToStage() {
 
 async function startCamera() {
   const permHint = document.getElementById('permHint');
+  // 先切到 live 狀態，讓攝影框套用正式的橫式比例鎖定之後，
+  // 再量測框的大小，否則量到的會是選場景畫面（沒鎖比例、通常比較高）
+  // 的尺寸，跟切到 live 後實際的框不一樣，畫面就會被裁得像放大好幾倍。
+  document.getElementById('app').dataset.state = 'live';
   syncCanvasSizeToStage();
   try {
     stream = await navigator.mediaDevices.getUserMedia({

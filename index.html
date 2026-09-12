@@ -182,6 +182,11 @@
     @page{ size: 85.6mm 54mm; margin:0; }
     body *{ visibility:hidden; }
     #printImg{
+      /* #printImg 平常是 display:none（inline style），
+         inline style 的優先權比一般的 stylesheet 規則高，
+         單靠這裡的 visibility:visible 蓋不掉，畫面還是不會出現，
+         要用 !important 才蓋得掉，不然列印預覽會是一片空白。 */
+      display:block !important;
       visibility:visible;
       position:fixed; inset:0; width:100%; height:100%; object-fit:cover; margin:0;
     }
