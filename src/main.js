@@ -5,7 +5,7 @@ let W = 640, H = 480;             // 即時預覽解析度，實際比例會依�
 const CAPTURE_SCALE = 2;          // 拍照當下的全解析度輸出倍率
 let scenesBuiltFor = null;        // 記錄目前 scenes 是用哪個 W×H 產生的，比例變了要重畫
 
-let state = 'idle'; // idle | scenePick | live | captured
+let state = 'scenePick'; // scenePick | live | captured
 let stream = null, video = null;
 let rafId = null;
 let facingMode = 'user';
@@ -116,24 +116,8 @@ function setStatus(live) {
   document.getElementById('statusText').textContent = live ? '預覽中（未去背）' : '待機';
 }
 
-function showIdle() {
-  state = 'idle';
-  document.getElementById('idleView').style.display = 'flex';
-  document.getElementById('scenePickView').style.display = 'none';
-  displayCanvas.style.display = 'none';
-  document.getElementById('resultImg').style.display = 'none';
-  document.getElementById('sceneSection').style.display = 'none';
-  document.getElementById('liveActionBar').style.display = 'none';
-  document.getElementById('resultActionBar').style.display = 'none';
-  document.getElementById('modeTag').style.display = 'none';
-  document.getElementById('statTag').style.display = 'none';
-  document.getElementById('facingBtn').style.display = 'none';
-  setStatus(false);
-}
-
 function showScenePick() {
   state = 'scenePick';
-  document.getElementById('idleView').style.display = 'none';
   document.getElementById('scenePickView').style.display = 'flex';
   document.getElementById('resultImg').style.display = 'none';
   displayCanvas.style.display = 'none';
@@ -148,7 +132,6 @@ function showScenePick() {
 
 function showLive() {
   state = 'live';
-  document.getElementById('idleView').style.display = 'none';
   document.getElementById('scenePickView').style.display = 'none';
   document.getElementById('resultImg').style.display = 'none';
   displayCanvas.style.display = 'block';
@@ -313,12 +296,11 @@ async function captureAndProcess() {
   showCaptured(out.toDataURL('image/png'), t1 - t0, usedDevice, fellBack);
 }
 
-document.getElementById('startBtn').addEventListener('click', () => { ensureScenesBuilt(); showScenePick(); });
 document.getElementById('confirmSceneBtn').addEventListener('click', startCamera);
 document.getElementById('shutterBtn').addEventListener('click', () => { captureAndProcess(); });
 document.getElementById('retakeBtn').addEventListener('click', () => { lastForeground = null; showLive(); });
 document.getElementById('exportPngBtn').addEventListener('click', downloadResultPng);
-document.getElementById('backToIdleBtn').addEventListener('click', () => { lastForeground = null; stopCamera(); showIdle(); });
+document.getElementById('backToIdleBtn').addEventListener('click', () => { lastForeground = null; stopCamera(); ensureScenesBuilt(); showScenePick(); });
 
 function downloadResultPng() {
   const dataUrl = document.getElementById('resultImg').src;
@@ -335,4 +317,5 @@ document.getElementById('facingBtn').addEventListener('click', () => {
   startCamera();
 });
 
-showIdle();
+ensureScenesBuilt();
+showScenePick();

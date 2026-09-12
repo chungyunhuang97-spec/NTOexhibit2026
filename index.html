@@ -74,17 +74,8 @@
     justify-content:center;
   }
   .scene-grid .scene-btn{ width:100%; height:auto; aspect-ratio:1; }
-
-  .idle{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:10px; text-align:center; padding:20px; color:var(--text-muted);
-  }
-  .idle .ring{
-    width:48px; height:48px; border-radius:50%; border:1.5px solid var(--border);
-    display:flex; align-items:center; justify-content:center; font-size:1.2rem;
-  }
-  .idle p{ margin:0; font-size:.76rem; line-height:1.5; max-width: 38ch; }
-  .idle .err{ color: var(--warn); font-size:.72rem; }
+  .scene-pick-hint{ margin:0; font-size:.68rem; color:var(--text-muted); text-align:center; max-width:34ch; }
+  .scene-pick-hint.err{ color:var(--warn); }
 
   .stat-tag{
     position:absolute; top:10px; right:10px; background:rgba(21,19,15,0.72);
@@ -188,16 +179,10 @@
   </header>
 
   <div class="stage" id="stage">
-    <div class="idle" id="idleView">
-      <div class="ring">🤖</div>
-      <p>這一版<strong style="color:var(--text)">不需要單色背板</strong>，對著任何背景都可以測。點擊下方按鈕開始。</p>
-      <p style="font-size:.66rem" id="permHint">選好場景後，iPad Safari 會跳出相機權限詢問，請允許使用。第一次拍照會下載 AI 模型，之後瀏覽器會快取。</p>
-      <button class="btn primary idle-start-btn" id="startBtn">開始</button>
-    </div>
-
     <div class="scene-pick" id="scenePickView">
       <div class="label">選擇場景</div>
       <div class="scene-grid" id="sceneGrid"></div>
+      <p class="scene-pick-hint" id="permHint">按下拍照後，iPad Safari 會跳出相機權限詢問，請允許使用</p>
       <button class="btn primary idle-start-btn" id="confirmSceneBtn">拍照</button>
     </div>
 
