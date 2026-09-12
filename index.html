@@ -118,6 +118,10 @@
   .btn.primary{ background:var(--accent); color:#0b1220; }
   .btn.primary:active{ filter:brightness(0.92); }
   .btn.ghost{ background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.4); color:#fff; }
+  .back-to-idle-link{
+    background:none; border:none; color:rgba(255,255,255,0.6); font-size:.66rem;
+    font-family:var(--sans); text-decoration:underline; cursor:pointer; padding:2px;
+  }
 
   /* Row 2: 場景選擇 */
   section.scenes{ flex:0 0 auto; display:none; flex-direction:column; gap:6px; }
@@ -186,8 +190,9 @@
         <div class="result-stat" id="resultStat">處理耗時：-- ms</div>
         <div class="result-btn-row">
           <button class="btn ghost" id="retakeBtn">重新拍攝</button>
-          <button class="btn primary" id="backToIdleBtn">完成</button>
+          <button class="btn primary" id="exportPngBtn">輸出 PNG</button>
         </div>
+        <button class="back-to-idle-link" id="backToIdleBtn">回到待機畫面</button>
       </div>
     </div>
 

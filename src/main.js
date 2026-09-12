@@ -272,7 +272,18 @@ async function captureAndProcess() {
 document.getElementById('startBtn').addEventListener('click', startCamera);
 document.getElementById('shutterBtn').addEventListener('click', () => { captureAndProcess(); });
 document.getElementById('retakeBtn').addEventListener('click', () => { lastForeground = null; showLive(); });
+document.getElementById('exportPngBtn').addEventListener('click', downloadResultPng);
 document.getElementById('backToIdleBtn').addEventListener('click', () => { lastForeground = null; stopCamera(); showIdle(); });
+
+function downloadResultPng() {
+  const dataUrl = document.getElementById('resultImg').src;
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'ntu-ai-demo-' + Date.now() + '.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 document.getElementById('facingBtn').addEventListener('click', () => {
   facingMode = facingMode === 'user' ? 'environment' : 'user';
   stopCamera();
