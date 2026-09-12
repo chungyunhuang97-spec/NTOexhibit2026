@@ -10,9 +10,13 @@ let stream = null, video = null;
 let rafId = null;
 let facingMode = 'user';
 
-// 模型品質／執行裝置不對外顯示控制項。強制使用最高品質模型（isnet），
-// 不再依網路/裝置狀況自動降級成 isnet_fp16，避免髮絲邊緣、衣服誤刪等去背精細度問題。
-const modelChoice = 'isnet';
+// 模型品質／執行裝置不對外顯示控制項。統一固定用同一個模型，不再依網路/
+// 裝置狀況切換，行為在所有裝置上保持一致。
+// 這裡用 'isnet_fp16' 而不是最高精度的 'isnet'：兩者是同一套神經網路，
+// 差別只在數值精度，'isnet' 記憶體用量大約是 fp16 版本的兩倍——曾經在
+// 較舊/較弱的手機上測到跑到 99% 時整頁當掉（記憶體不足），改回 fp16 後
+// 才穩定。'isnet_fp16' 也是套件官方文件裡預設建議使用的版本。
+const modelChoice = 'isnet_fp16';
 let deviceChoice = 'gpu'; // 預設 GPU，跑不動時 captureAndProcess() 會自動退回 CPU 重試
 
 let previewCtx;
@@ -125,6 +129,7 @@ function setStatus(live) {
 
 function showScenePick() {
   state = 'scenePick';
+  document.getElementById('app').dataset.state = state;
   document.getElementById('scenePickView').style.display = 'flex';
   document.getElementById('resultImg').style.display = 'none';
   displayCanvas.style.display = 'none';
@@ -139,6 +144,7 @@ function showScenePick() {
 
 function showLive() {
   state = 'live';
+  document.getElementById('app').dataset.state = state;
   document.getElementById('scenePickView').style.display = 'none';
   document.getElementById('resultImg').style.display = 'none';
   displayCanvas.style.display = 'block';
@@ -155,6 +161,7 @@ function showLive() {
 
 function showCaptured(dataUrl, ms, usedDevice, fellBack) {
   state = 'captured';
+  document.getElementById('app').dataset.state = state;
   if (rafId) cancelAnimationFrame(rafId);
   const img = document.getElementById('resultImg');
   img.src = dataUrl;

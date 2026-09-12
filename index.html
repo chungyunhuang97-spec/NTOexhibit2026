@@ -57,13 +57,21 @@
   }
   .stage canvas, .stage img.result{ width:100%; height:100%; object-fit:cover; display:block; }
 
-  /* 展場裝置是 iPad 橫向掛載，攝影框固定用橫式比例呈現，
+  /* 展場裝置是 iPad 橫向掛載，拍照／結果畫面固定用橫式比例呈現，
      手機直拿測試時也一樣（置中、上下留白），跟正式畫面保持一致，
-     同時避免撐成又高又窄的框、把相機畫面裁得像被放大好幾倍 */
+     同時避免撐成又高又窄的框、把相機畫面裁得像被放大好幾倍。
+     選場景這一步不是相機取景，不需要鎖橫式比例——鎖了在手機直拿時
+     反而會把框壓得太扁，6 個場景按鈕會被裁掉，所以只在 live／captured
+     這兩個狀態套用。 */
   @media (orientation: portrait){
     .app{ justify-content:center; }
-    .stage{ flex:0 1 auto; aspect-ratio: 4/3; max-height:100%; }
+    .app[data-state="live"] .stage,
+    .app[data-state="captured"] .stage{ flex:0 1 auto; aspect-ratio: 4/3; max-height:100%; }
   }
+
+  /* 保險：萬一在極矮的視窗（例如手機橫放）裡場景選單還是放不下，
+     讓它可以捲動，而不是把拍照按鈕整個裁掉看不到。 */
+  .scene-pick{ overflow-y:auto; }
 
   .scene-pick{
     width:100%; height:100%; display:none; flex-direction:column;
