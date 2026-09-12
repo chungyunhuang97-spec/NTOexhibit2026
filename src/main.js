@@ -1,15 +1,15 @@
 import { removeBackground } from '@imgly/background-removal';
 import { buildScenes } from './scenes.js';
 
-const W = 480, H = 640;          // 即時預覽解析度（原始畫面，不做任何處理，開銷極低）
+const W = 640, H = 480;          // 即時預覽解析度（橫式 4:3，對應展場 iPad 橫向掛載）
 const CAPTURE_SCALE = 2;          // 拍照當下的全解析度輸出倍率
 
 let state = 'idle'; // idle | live | captured
 let stream = null, video = null;
 let rafId = null;
 let facingMode = 'user';
-let modelChoice = 'isnet_fp16';
-let deviceChoice = 'gpu';
+let modelChoice = pickDefaultQuality();
+let deviceChoice = 'gpu'; // 預設 GPU，跑不動時 captureAndProcess() 會自動退回 CPU 重試
 
 let previewCtx;
 const hiCanvas = document.createElement('canvas');
@@ -18,6 +18,21 @@ const hiCtx = hiCanvas.getContext('2d');
 const displayCanvas = document.getElementById('displayCanvas');
 let scenes = [];
 let activeSceneIndex = 0;
+
+// 依瀏覽器回報的網路狀況（Network Information API，iPad Safari 不支援，會直接略過這項判斷）
+// 與裝置核心數，粗略判斷「網路或設備比較弱」，類似手機訊號差時自動從 5G 降到 4G。
+function pickDefaultQuality() {
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  let weakNetwork = false;
+  if (conn) {
+    if (conn.saveData) weakNetwork = true;
+    if (conn.effectiveType && /2g|3g/.test(conn.effectiveType)) weakNetwork = true;
+    if (typeof conn.downlink === 'number' && conn.downlink < 3) weakNetwork = true;
+  }
+  const cores = navigator.hardwareConcurrency || 4;
+  const weakDevice = cores <= 4;
+  return (weakNetwork || weakDevice) ? 'isnet_fp16' : 'isnet';
+}
 
 function drawVideoCover(ctx, vid, w, h) {
   const vw = vid.videoWidth, vh = vid.videoHeight;
@@ -45,8 +60,8 @@ function renderSceneStrip() {
     const btn = document.createElement('button');
     btn.className = 'scene-btn' + (idx === activeSceneIndex ? ' active' : '');
     const mini = document.createElement('canvas');
-    mini.width = 58; mini.height = 58;
-    mini.getContext('2d').drawImage(s.canvas, 0, 0, 58, 58);
+    mini.width = 50; mini.height = 50;
+    mini.getContext('2d').drawImage(s.canvas, 0, 0, 50, 50);
     const num = document.createElement('span');
     num.className = 'num'; num.textContent = idx + 1;
     btn.appendChild(mini); btn.appendChild(num);
@@ -126,7 +141,7 @@ async function startCamera() {
   const permHint = document.getElementById('permHint');
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 720 }, height: { ideal: 960 } },
+      video: { facingMode, width: { ideal: 960 }, height: { ideal: 720 } },
       audio: false
     });
   } catch (err) {
@@ -156,25 +171,41 @@ function canvasToBlob(canvas) {
   return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
 }
 
-async function runRemoveBackground(blob, device) {
+// 把 @imgly/background-removal 的下載/推論進度（多個階段各自的 current/total）
+// 加總成單一百分比，驅動畫面上的進度條。
+function makeProgressHandler(fillEl, pctEl) {
+  const parts = new Map();
+  return (key, current, total) => {
+    parts.set(key, { current, total });
+    let sumCur = 0, sumTot = 0;
+    parts.forEach((p) => { sumCur += p.current; sumTot += p.total; });
+    const pct = sumTot > 0 ? Math.min(99, Math.round((sumCur / sumTot) * 100)) : 0;
+    fillEl.style.width = pct + '%';
+    pctEl.textContent = pct + '%';
+  };
+}
+
+async function runRemoveBackground(blob, device, onProgress) {
   return removeBackground(blob, {
     model: modelChoice,
     device,
     output: { type: 'foreground', format: 'image/png' },
+    progress: onProgress,
     debug: false
   });
 }
 
 async function captureAndProcess() {
   const veil = document.getElementById('processingVeil');
-  const veilTimer = document.getElementById('veilTimer');
   const veilText = document.getElementById('veilText');
+  const progressFill = document.getElementById('progressFill');
+  const progressPct = document.getElementById('progressPct');
   veil.style.display = 'flex';
   veilText.textContent = 'AI 去背處理中…';
+  progressFill.style.width = '0%';
+  progressPct.textContent = '0%';
   const t0 = performance.now();
-  let timerId = setInterval(() => {
-    veilTimer.textContent = ((performance.now() - t0) / 1000).toFixed(1) + 's';
-  }, 100);
+  const onProgress = makeProgressHandler(progressFill, progressPct);
 
   const CW = W * CAPTURE_SCALE, CH = H * CAPTURE_SCALE;
   hiCanvas.width = CW; hiCanvas.height = CH;
@@ -185,22 +216,22 @@ async function captureAndProcess() {
   let fellBack = false;
   let resultBlob;
   try {
-    resultBlob = await runRemoveBackground(blob, deviceChoice);
+    resultBlob = await runRemoveBackground(blob, deviceChoice, onProgress);
   } catch (err) {
     if (deviceChoice === 'gpu') {
       usedDevice = 'cpu';
       fellBack = true;
       veilText.textContent = 'GPU 加速不可用，改用 CPU 重試…';
+      progressFill.style.width = '0%';
+      progressPct.textContent = '0%';
       try {
-        resultBlob = await runRemoveBackground(blob, 'cpu');
+        resultBlob = await runRemoveBackground(blob, 'cpu', onProgress);
       } catch (err2) {
-        clearInterval(timerId);
         veil.style.display = 'none';
         alert('去背失敗：' + err2.message + '\n（請確認網路可以連線，第一次使用需要下載 AI 模型）');
         return;
       }
     } else {
-      clearInterval(timerId);
       veil.style.display = 'none';
       alert('去背失敗：' + err.message + '\n（請確認網路可以連線，第一次使用需要下載 AI 模型）');
       return;
@@ -219,7 +250,8 @@ async function captureAndProcess() {
   URL.revokeObjectURL(fgUrl);
 
   const t1 = performance.now();
-  clearInterval(timerId);
+  progressFill.style.width = '100%';
+  progressPct.textContent = '100%';
   veil.style.display = 'none';
   showCaptured(out.toDataURL('image/png'), t1 - t0, usedDevice, fellBack);
 }
@@ -228,7 +260,6 @@ document.getElementById('startBtn').addEventListener('click', startCamera);
 document.getElementById('shutterBtn').addEventListener('click', () => { captureAndProcess(); });
 document.getElementById('retakeBtn').addEventListener('click', showLive);
 document.getElementById('backToIdleBtn').addEventListener('click', () => { stopCamera(); showIdle(); });
-document.getElementById('idleAgainBtn').addEventListener('click', () => { stopCamera(); showIdle(); });
 document.getElementById('facingBtn').addEventListener('click', () => {
   facingMode = facingMode === 'user' ? 'environment' : 'user';
   stopCamera();

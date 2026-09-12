@@ -23,27 +23,43 @@
     --sans: 'Noto Sans TC', 'Hiragino Sans', system-ui, sans-serif;
   }
   *{ box-sizing: border-box; }
+  html, body{ height: 100%; }
   body{
     margin:0; background:var(--bg); color:var(--text);
     font-family:var(--sans);
-    padding: 0 16px;
-    padding-block: 20px 40px;
-    display:flex; justify-content:center;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    display:flex;
   }
-  .app{ width:100%; max-width:460px; display:flex; flex-direction:column; gap:14px; }
 
-  header.top{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-  header.top h1{ font-size: 1.05rem; font-weight:700; margin:0; letter-spacing:.02em; }
-  header.top .sub{ font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+  .app{
+    flex:1; min-width:0; min-height:0;
+    display:flex; flex-direction:row; gap:12px;
+    padding: 12px;
+  }
+
+  .stage-col{ flex:1 1 auto; min-width:0; min-height:0; display:flex; flex-direction:column; gap:8px; }
+  .side-col{
+    flex:0 0 300px; max-width:320px; min-height:0;
+    display:flex; flex-direction:column; gap:8px;
+    overflow-y:auto; scrollbar-width:none;
+  }
+  .side-col::-webkit-scrollbar{ display:none; }
+
+  header.top{ flex:0 0 auto; display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  header.top h1{ font-size: 1rem; font-weight:700; margin:0; letter-spacing:.02em; }
+  header.top .sub{ font-size:.68rem; color:var(--text-muted); margin-top:2px; }
   .status{
-    font-family:var(--mono); font-size:.68rem; color:var(--text-muted);
-    display:flex; align-items:center; gap:6px; white-space:nowrap;
+    font-family:var(--mono); font-size:.66rem; color:var(--text-muted);
+    display:flex; align-items:center; gap:6px; white-space:nowrap; flex:0 0 auto;
   }
   .status .dot{ width:7px; height:7px; border-radius:50%; background:var(--border); }
   .status.live .dot{ background:var(--live); box-shadow:0 0 6px var(--live); }
 
   .stage{
-    position:relative; width:100%; aspect-ratio: 3/4;
+    position:relative; width:100%; flex:1; min-height:0;
+    aspect-ratio: 4/3;
     background:var(--surface); border:1px solid var(--border); border-radius:18px;
     overflow:hidden; display:flex; align-items:center; justify-content:center;
   }
@@ -51,14 +67,14 @@
 
   .idle{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:16px; text-align:center; padding:32px; color:var(--text-muted);
+    gap:10px; text-align:center; padding:20px; color:var(--text-muted);
   }
   .idle .ring{
-    width:64px; height:64px; border-radius:50%; border:1.5px solid var(--border);
-    display:flex; align-items:center; justify-content:center; font-size:1.4rem;
+    width:48px; height:48px; border-radius:50%; border:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-size:1.2rem;
   }
-  .idle p{ margin:0; font-size:.8rem; line-height:1.6; max-width: 30ch; }
-  .idle .err{ color: var(--warn); font-size:.75rem; }
+  .idle p{ margin:0; font-size:.76rem; line-height:1.5; max-width: 38ch; }
+  .idle .err{ color: var(--warn); font-size:.72rem; }
 
   .stat-tag{
     position:absolute; top:10px; right:10px; background:rgba(21,19,15,0.72);
@@ -74,165 +90,176 @@
   }
 
   .processing-veil{
-    position:absolute; inset:0; background:rgba(21,19,15,0.86); backdrop-filter:blur(2px);
-    display:none; align-items:center; justify-content:center; flex-direction:column; gap:10px;
+    position:absolute; inset:0; background:rgba(21,19,15,0.9); backdrop-filter:blur(2px);
+    display:none; align-items:center; justify-content:center; flex-direction:column; gap:14px;
     color:var(--text-muted); font-size:.72rem; font-family:var(--mono); text-align:center; padding:24px;
   }
-  .processing-veil .spinner{
-    width:26px; height:26px; border-radius:50%; border:2.5px solid var(--surface-3);
-    border-top-color:var(--accent); animation:spin .7s linear infinite;
-  }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .progress-wrap{ width:min(70%, 260px); display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .progress-track{ width:100%; height:8px; border-radius:100px; background:var(--surface-3); overflow:hidden; }
+  .progress-fill{ height:100%; width:0%; background:var(--accent); border-radius:100px; transition:width .15s ease-out; }
+  .progress-pct{ font-family:var(--mono); font-size:.85rem; color:var(--text); font-weight:700; }
 
-  section.scenes{ display:flex; flex-direction:column; gap:8px; }
+  section.scenes{ flex:0 0 auto; display:flex; flex-direction:column; gap:6px; }
   .label-row{ display:flex; justify-content:space-between; align-items:baseline; }
-  .label{ font-size:.68rem; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; }
-  .scene-strip{ display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .label{ font-size:.64rem; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; }
+  .scene-strip{ display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
   .scene-strip::-webkit-scrollbar{ display:none; }
   .scene-btn{
-    flex: 0 0 auto; width:58px; height:58px; border-radius:12px; padding:0;
+    flex: 0 0 auto; width:50px; height:50px; border-radius:10px; padding:0;
     border:1.5px solid var(--border); background:var(--surface-2); cursor:pointer;
     overflow:hidden; position:relative;
   }
   .scene-btn canvas{ width:100%; height:100%; display:block; }
   .scene-btn.active{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
   .scene-btn .num{
-    position:absolute; bottom:2px; right:4px; font-family:var(--mono); font-size:.55rem;
+    position:absolute; bottom:2px; right:4px; font-family:var(--mono); font-size:.52rem;
     color:rgba(255,255,255,0.85); text-shadow:0 1px 2px rgba(0,0,0,0.6);
   }
 
   section.controls{
-    display:flex; flex-direction:column; gap:12px; background:var(--surface);
-    border:1px solid var(--border); border-radius:14px; padding:14px 16px;
+    flex:0 0 auto;
+    display:flex; flex-direction:column; gap:10px; background:var(--surface);
+    border:1px solid var(--border); border-radius:14px; padding:12px 14px;
   }
-  .ctrl-row{ display:flex; flex-direction:column; gap:6px; }
-  .ctrl-row .name{ font-size:.76rem; color:var(--text); }
-  .ctrl-row .desc{ font-size:.64rem; color:var(--text-muted); }
+  .ctrl-row{ display:flex; flex-direction:column; gap:5px; }
+  .ctrl-row .name{ font-size:.74rem; color:var(--text); }
+  .ctrl-row .desc{ font-size:.62rem; color:var(--text-muted); }
   .seg{ display:flex; gap:6px; }
   .seg button{
-    flex:1; padding:9px 6px; border-radius:9px; border:1.5px solid var(--border);
+    flex:1; padding:8px 6px; border-radius:9px; border:1.5px solid var(--border);
     background:var(--surface-2); color:var(--text-muted); font-family:var(--mono);
-    font-size:.68rem; cursor:pointer;
+    font-size:.66rem; cursor:pointer;
   }
   .seg button.active{ border-color:var(--accent); color:var(--text); background:var(--accent-soft); }
 
-  .action-bar{ display:flex; align-items:center; gap:12px; }
-  .btn{
-    flex:1; border:none; border-radius:100px; padding:14px 18px; font-size:.85rem;
-    font-weight:700; cursor:pointer; font-family:var(--sans); letter-spacing:.02em;
-  }
-  .btn.primary{ background:var(--accent); color:#0b1220; }
-  .btn.primary:active{ filter:brightness(0.92); }
-  .btn.ghost{ background:transparent; border:1.5px solid var(--border); color:var(--text); }
+  .shutter-row{ flex:0 0 auto; display:flex; align-items:center; justify-content:center; padding:2px 0; }
   .shutter{
-    width:60px; height:60px; border-radius:50%; flex:0 0 auto; border:3px solid var(--accent);
+    width:58px; height:58px; border-radius:50%; flex:0 0 auto; border:3px solid var(--accent);
     background:var(--bg); cursor:pointer; position:relative;
   }
   .shutter::after{ content:''; position:absolute; inset:5px; border-radius:50%; background:var(--accent); }
   .shutter:active::after{ inset:8px; }
   .facing-toggle{
     background:var(--surface-2); border:1px solid var(--border);
-    color:var(--text-muted); font-size:.68rem; font-family:var(--mono); padding:6px 10px;
+    color:var(--text-muted); font-size:.66rem; font-family:var(--mono); padding:6px 10px;
     border-radius:100px; cursor:pointer;
   }
 
-  .save-hint{ font-size:.68rem; color:var(--text-muted); text-align:center; line-height:1.6; }
-  .result-stat{ font-family:var(--mono); font-size:.7rem; color:var(--live); text-align:center; line-height:1.6; }
+  .action-bar{ flex:0 0 auto; display:flex; align-items:center; gap:10px; }
+  .btn{
+    flex:1; border:none; border-radius:100px; padding:12px 16px; font-size:.8rem;
+    font-weight:700; cursor:pointer; font-family:var(--sans); letter-spacing:.02em;
+  }
+  .btn.primary{ background:var(--accent); color:#0b1220; }
+  .btn.primary:active{ filter:brightness(0.92); }
+  .btn.ghost{ background:transparent; border:1.5px solid var(--border); color:var(--text); }
+
+  .save-hint{ font-size:.64rem; color:var(--text-muted); text-align:center; line-height:1.5; }
+  .result-stat{ font-family:var(--mono); font-size:.66rem; color:var(--live); text-align:center; line-height:1.5; }
   .result-stat.fallback{ color:var(--warn); }
 
-  details.tech{ font-size:.72rem; color:var(--text-muted); }
-  details.tech summary{ cursor:pointer; color:var(--text); font-size:.76rem; padding:2px 0; }
-  details.tech .body{ padding-top:8px; line-height:1.7; display:flex; flex-direction:column; gap:6px; }
-  details.tech code{ font-family:var(--mono); background:var(--surface-2); padding:1px 5px; border-radius:4px; color:var(--accent); font-size:.68rem; }
+  details.tech{ flex:0 0 auto; font-size:.68rem; color:var(--text-muted); }
+  details.tech summary{ cursor:pointer; color:var(--text); font-size:.72rem; padding:2px 0; }
+  details.tech .body{ padding-top:6px; line-height:1.6; display:flex; flex-direction:column; gap:5px; }
+  details.tech code{ font-family:var(--mono); background:var(--surface-2); padding:1px 5px; border-radius:4px; color:var(--accent); font-size:.64rem; }
 
-  @media (max-width: 400px){ .app{ max-width:100%; } }
+  @media (max-width: 780px), (orientation: portrait){
+    .app{ flex-direction:column; overflow-y:auto; }
+    .app::-webkit-scrollbar{ display:none; }
+    .stage-col{ flex:1 1 auto; }
+    .stage{ min-height:180px; }
+    .side-col{ flex:0 0 auto; max-width:100%; max-height:none; overflow-y:visible; }
+  }
 </style>
 </head>
 <body>
-<div class="app">
+<div class="app" id="app">
 
-  <header class="top">
-    <div>
-      <h1>AI 去背測試機</h1>
-      <div class="sub">拍完再處理・瀏覽器端 AI 人像分割（@imgly/background-removal），不需要單色背板</div>
-    </div>
-    <div class="status" id="statusTag"><span class="dot"></span><span id="statusText">待機</span></div>
-  </header>
-
-  <div class="stage" id="stage">
-    <div class="idle" id="idleView">
-      <div class="ring">🤖</div>
-      <p>這一版<strong style="color:var(--text)">不需要單色背板</strong>，對著任何背景都可以測，適合國家音樂廳售票口這種無法佈景的現場。點擊下方按鈕啟動相機。</p>
-      <p style="font-size:.68rem" id="permHint">iPad Safari 會跳出相機權限詢問，請允許使用。第一次拍照會下載 AI 模型（依網路約需幾秒到十幾秒），之後瀏覽器會快取，同一台裝置會快很多。</p>
-      <button class="btn primary" id="startBtn" style="width:auto; padding:12px 28px;">啟動相機</button>
-    </div>
-    <canvas id="displayCanvas" width="480" height="640" style="display:none;"></canvas>
-    <img id="resultImg" class="result" style="display:none;" alt="合成結果" />
-    <div class="mode-tag" id="modeTag" style="display:none;">預覽（原始畫面，未去背）</div>
-    <div class="stat-tag" id="statTag" style="display:none;">未拍攝</div>
-    <div class="processing-veil" id="processingVeil">
-      <div class="spinner"></div>
-      <div id="veilText">AI 去背處理中…</div>
-      <div id="veilTimer" style="color:var(--text)">0.0s</div>
-    </div>
-  </div>
-
-  <section class="scenes" id="sceneSection" style="display:none;">
-    <div class="label-row"><span class="label">場景選擇（佔位美術，供流程測試）</span></div>
-    <div class="scene-strip" id="sceneStrip"></div>
-  </section>
-
-  <section class="controls" id="controlSection" style="display:none;">
-    <div class="ctrl-row">
-      <div class="name">模型品質</div>
-      <div class="desc">影響去背細膩度與處理時間，可現場直接比較</div>
-      <div class="seg" id="modelSeg">
-        <button data-val="isnet_quint8">輕量</button>
-        <button data-val="isnet_fp16" class="active">標準</button>
-        <button data-val="isnet">最高品質</button>
-      </div>
-    </div>
-    <div class="ctrl-row">
-      <div class="name">執行裝置</div>
-      <div class="desc">測試展場 iPad 是否吃得動 GPU 加速（WebGPU）</div>
-      <div class="seg" id="deviceSeg">
-        <button data-val="gpu" class="active">GPU</button>
-        <button data-val="cpu">CPU</button>
-      </div>
-    </div>
-    <div class="ctrl-row" style="flex-direction:row; align-items:center; justify-content:space-between;">
+  <div class="stage-col">
+    <header class="top">
       <div>
-        <div class="name">鏡頭</div>
+        <h1>AI 去背測試機</h1>
+        <div class="sub">拍完再處理・瀏覽器端 AI 人像分割（@imgly/background-removal）</div>
       </div>
-      <button class="facing-toggle" id="facingBtn">切換前後鏡頭</button>
-    </div>
-  </section>
+      <div class="status" id="statusTag"><span class="dot"></span><span id="statusText">待機</span></div>
+    </header>
 
-  <div class="action-bar" id="liveActionBar" style="display:none;">
-    <button class="btn ghost" id="idleAgainBtn">結束</button>
-    <button class="shutter" id="shutterBtn" aria-label="拍照"></button>
-    <div style="flex:1"></div>
+    <div class="stage" id="stage">
+      <div class="idle" id="idleView">
+        <div class="ring">🤖</div>
+        <p>這一版<strong style="color:var(--text)">不需要單色背板</strong>，對著任何背景都可以測。點擊下方按鈕啟動相機。</p>
+        <p style="font-size:.66rem" id="permHint">iPad Safari 會跳出相機權限詢問，請允許使用。第一次拍照會下載 AI 模型，之後瀏覽器會快取。</p>
+        <button class="btn primary" id="startBtn" style="width:auto; padding:11px 26px;">啟動相機</button>
+      </div>
+      <canvas id="displayCanvas" width="640" height="480" style="display:none;"></canvas>
+      <img id="resultImg" class="result" style="display:none;" alt="合成結果" />
+      <div class="mode-tag" id="modeTag" style="display:none;">預覽（原始畫面，未去背）</div>
+      <div class="stat-tag" id="statTag" style="display:none;">未拍攝</div>
+      <div class="processing-veil" id="processingVeil">
+        <div class="progress-wrap">
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-pct" id="progressPct">0%</div>
+        </div>
+        <div id="veilText">AI 去背處理中…</div>
+      </div>
+    </div>
+
+    <div class="shutter-row" id="liveActionBar" style="display:none;">
+      <button class="shutter" id="shutterBtn" aria-label="拍照"></button>
+    </div>
+
+    <div class="action-bar" id="resultActionBar" style="display:none; flex-direction:column; gap:8px;">
+      <div class="result-stat" id="resultStat">處理耗時：-- ms</div>
+      <div class="save-hint">在圖片上長按即可選擇「加入照片圖庫」儲存</div>
+      <div class="action-bar" style="width:100%;">
+        <button class="btn ghost" id="retakeBtn">重新拍攝</button>
+        <button class="btn primary" id="backToIdleBtn">回到待機畫面</button>
+      </div>
+    </div>
   </div>
 
-  <div class="action-bar" id="resultActionBar" style="display:none; flex-direction:column; gap:10px;">
-    <div class="result-stat" id="resultStat">處理耗時：-- ms</div>
-    <div class="save-hint">在圖片上長按即可選擇「加入照片圖庫」儲存</div>
-    <div class="action-bar" style="width:100%;">
-      <button class="btn ghost" id="retakeBtn">重新拍攝</button>
-      <button class="btn primary" id="backToIdleBtn">回到待機畫面</button>
-    </div>
-  </div>
+  <div class="side-col">
+    <section class="scenes" id="sceneSection" style="display:none;">
+      <div class="label-row"><span class="label">場景選擇（佔位美術）</span></div>
+      <div class="scene-strip" id="sceneStrip"></div>
+    </section>
 
-  <details class="tech">
-    <summary>技術筆記（給小豬）</summary>
-    <div class="body">
-      <div>這版對應「售票口周圍無法佈置實體背板」的現場條件：去背改用瀏覽器端 AI 人像分割模型 <code>@imgly/background-removal</code>（ISNet 系列），不要求背景是單一顏色，人多、有裝潢、地板反光都不影響辨識邏輯——這點跟色鍵去背版本本質不同。</div>
-      <div>流程一樣是「拍完再處理」：按快門前只是原始相機畫面，按下快門後對那張全解析度影格跑一次 AI 去背，畫面上會顯示<strong style="color:var(--text)">實際量測的處理耗時</strong>，這是判斷「使用者等待感」的關鍵數字。</div>
-      <div>「模型品質」跟「執行裝置（GPU／CPU）」都可以現場直接切換比較——這兩個數字組合起來，就是回答「這台展場 iPad 能不能吃得動、值不值得選 GPU（WebGPU）加速」這個懸而未決的問題。GPU 模式若該瀏覽器不支援會自動退回 CPU，畫面會標示「已退回 CPU」。</div>
-      <div>第一次拍照需要下載模型檔（約數 MB，依選擇的模型品質而定），這台裝置之後瀏覽器會快取；正式上線若要完全離線使用，仍建議評估 Capacitor 原生封裝或至少確保開展前每台 iPad 都預先跑過一次以完成快取，避免展場網路不穩定時卡在下載這一步。</div>
-      <div>場景美術目前都是程式產生的佔位色塊，只是先驗證流程與去背品質，不是最終視覺。</div>
-    </div>
-  </details>
+    <section class="controls" id="controlSection" style="display:none;">
+      <div class="ctrl-row">
+        <div class="name">模型品質</div>
+        <div class="desc">預設最高品質，偵測到網路/設備較弱時自動降為標準</div>
+        <div class="seg" id="modelSeg">
+          <button data-val="isnet_quint8">輕量</button>
+          <button data-val="isnet_fp16">標準</button>
+          <button data-val="isnet">最高品質</button>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="name">執行裝置</div>
+        <div class="desc">預設 GPU，若該瀏覽器不支援會自動退回 CPU</div>
+        <div class="seg" id="deviceSeg">
+          <button data-val="gpu" class="active">GPU</button>
+          <button data-val="cpu">CPU</button>
+        </div>
+      </div>
+      <div class="ctrl-row" style="flex-direction:row; align-items:center; justify-content:space-between;">
+        <div class="name">鏡頭</div>
+        <button class="facing-toggle" id="facingBtn">切換前後鏡頭</button>
+      </div>
+    </section>
+
+    <details class="tech">
+      <summary>技術筆記（給小豬）</summary>
+      <div class="body">
+        <div>這版對應「售票口周圍無法佈置實體背板」的現場條件：去背改用瀏覽器端 AI 人像分割模型 <code>@imgly/background-removal</code>，不要求背景是單一顏色。</div>
+        <div>流程是「拍完再處理」：按下快門後對那張全解析度影格跑一次 AI 去背，處理中顯示<strong style="color:var(--text)">即時進度條</strong>（依模型下載/推論實際進度更新，不是假的倒數）。</div>
+        <div>「模型品質」預設最高品質，會依瀏覽器回報的網路狀況（Network Information API，iPad Safari 目前不支援此 API，故僅作為其他瀏覽器/裝置的輔助判斷）與裝置核心數自動降為標準；也可以現場手動切換比較。</div>
+        <div>「執行裝置」預設 GPU，若該瀏覽器/裝置不支援 WebGPU 或執行失敗，會自動退回 CPU 重跑一次，畫面會標示「已退回 CPU」。</div>
+        <div>拍攝畫面與輸出照片都是橫式（4:3），對應展場 iPad 橫向掛載的實際使用情境。</div>
+        <div>場景美術目前都是程式產生的佔位色塊，只是先驗證流程與去背品質，不是最終視覺。</div>
+      </div>
+    </details>
+  </div>
 
 </div>
 <script type="module" src="/src/main.js"></script>
