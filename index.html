@@ -163,13 +163,15 @@
     .scene-btn{ width:54px; height:54px; }
   }
 
-  /* 列印：只印合成後的照片本身，畫面上的按鈕、場景列、標題都不印 */
+  /* 列印：只印合成後的照片本身，畫面上的按鈕、場景列、標題都不印。
+     紙張尺寸目前先用證卡/名牌常見的 CR80 尺寸（85.6×54mm）當佔位值，
+     印表機/紙材確定後，改這裡的 size 就好，其他都不用動。 */
   @media print{
-    @page{ margin:0; }
+    @page{ size: 85.6mm 54mm; margin:0; }
     body *{ visibility:hidden; }
     #resultImg{
       visibility:visible;
-      position:fixed; inset:0; width:100%; height:auto; margin:0;
+      position:fixed; inset:0; width:100%; height:100%; object-fit:cover; margin:0;
     }
   }
 </style>
