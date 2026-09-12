@@ -10,8 +10,9 @@ let stream = null, video = null;
 let rafId = null;
 let facingMode = 'user';
 
-// 模型品質／執行裝置不對外顯示控制項，背景自動判斷／自動退回。
-const modelChoice = pickDefaultQuality();
+// 模型品質／執行裝置不對外顯示控制項。強制使用最高品質模型（isnet），
+// 不再依網路/裝置狀況自動降級成 isnet_fp16，避免髮絲邊緣、衣服誤刪等去背精細度問題。
+const modelChoice = 'isnet';
 let deviceChoice = 'gpu'; // 預設 GPU，跑不動時 captureAndProcess() 會自動退回 CPU 重試
 
 let previewCtx;
@@ -25,21 +26,6 @@ let activeSceneIndex = 0;
 
 // 拍照當下去背完成的人像（透明背景 PNG），換場景時直接重新合成，不必重跑 AI。
 let lastForeground = null; // { img, CW, CH }
-
-// 依瀏覽器回報的網路狀況（Network Information API，iPad Safari 不支援，會直接略過這項判斷）
-// 與裝置核心數，粗略判斷「網路或設備比較弱」，類似手機訊號差時自動從 5G 降到 4G。
-function pickDefaultQuality() {
-  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  let weakNetwork = false;
-  if (conn) {
-    if (conn.saveData) weakNetwork = true;
-    if (conn.effectiveType && /2g|3g/.test(conn.effectiveType)) weakNetwork = true;
-    if (typeof conn.downlink === 'number' && conn.downlink < 3) weakNetwork = true;
-  }
-  const cores = navigator.hardwareConcurrency || 4;
-  const weakDevice = cores <= 4;
-  return (weakNetwork || weakDevice) ? 'isnet_fp16' : 'isnet';
-}
 
 function drawVideoCover(ctx, vid, w, h) {
   const vw = vid.videoWidth, vh = vid.videoHeight;
