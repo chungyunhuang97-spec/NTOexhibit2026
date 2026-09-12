@@ -21,7 +21,6 @@ export function buildScenes(w, h) {
         g.addColorStop(0, '#3a2b52'); g.addColorStop(0.45, '#a1466b'); g.addColorStop(0.75, '#e88a4c'); g.addColorStop(1, '#f5c56a');
         ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
         glow(ctx, w * 0.5, h * 0.55, w * 0.6, 'rgba(255,220,150,ALPHA)', 0.5);
-        ctx.fillStyle = 'rgba(15,10,20,0.55)'; ctx.fillRect(0, h * 0.82, w, h * 0.18);
       } },
     { name: '深夜城市', draw(ctx) {
         const g = ctx.createLinearGradient(0, 0, 0, h);
@@ -31,7 +30,6 @@ export function buildScenes(w, h) {
           ctx.fillStyle = 'rgba(255,224,150,' + (Math.random() * 0.5 + 0.2) + ')';
           ctx.fillRect(Math.random() * w, h * 0.55 + Math.random() * h * 0.4, 1.5, 1.5);
         }
-        ctx.fillStyle = '#05070f'; ctx.fillRect(0, h * 0.78, w, h * 0.22);
       } },
     { name: '森林光影', draw(ctx) {
         const g = ctx.createLinearGradient(0, 0, 0, h);
@@ -57,14 +55,12 @@ export function buildScenes(w, h) {
         ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
         glow(ctx, w * 0.3, h * 0.2, w * 0.9, 'rgba(120,255,210,ALPHA)', 0.28);
         glow(ctx, w * 0.75, h * 0.35, w * 0.7, 'rgba(150,140,255,ALPHA)', 0.24);
-        ctx.fillStyle = '#0d1a22'; ctx.fillRect(0, h * 0.86, w, h * 0.14);
       } },
     { name: '摩登展場', draw(ctx) {
         const g = ctx.createLinearGradient(0, 0, 0, h);
         g.addColorStop(0, '#d8d2c6'); g.addColorStop(1, '#a89e8c');
         ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(0, 0, w, h * 0.5);
-        ctx.fillStyle = 'rgba(60,50,40,0.12)'; ctx.fillRect(0, h * 0.72, w, h * 0.28);
       } }
   ].map((s) => ({ name: s.name, canvas: makeScene(w, h, s.draw) }));
 }
