@@ -1,8 +1,9 @@
 import { removeBackground } from '@imgly/background-removal';
 import { buildScenes } from './scenes.js';
 
-const W = 640, H = 480;          // 即時預覽解析度（橫式 4:3，對應展場 iPad 橫向掛載）
+let W = 640, H = 480;             // 即時預覽解析度，實際比例會依攝影框當下的顯示比例動態校正
 const CAPTURE_SCALE = 2;          // 拍照當下的全解析度輸出倍率
+let scenesBuiltFor = null;        // 記錄目前 scenes 是用哪個 W×H 產生的，比例變了要重畫
 
 let state = 'idle'; // idle | live | captured
 let stream = null, video = null;
@@ -149,11 +150,23 @@ function showCaptured(dataUrl, ms, usedDevice, fellBack) {
   setStatus(false);
 }
 
+// 讓拍照/合成用的畫布比例，跟攝影框（.stage）當下實際顯示的比例一致，
+// 避免 CSS object-fit:cover 在螢幕上裁掉的範圍，跟真正輸出的照片範圍對不上。
+function syncCanvasSizeToStage() {
+  const rect = document.getElementById('stage').getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const aspect = rect.width / rect.height;
+  const baseLong = 960; // 基準長邊解析度
+  if (aspect >= 1) { W = baseLong; H = Math.round(baseLong / aspect); }
+  else { H = baseLong; W = Math.round(baseLong * aspect); }
+}
+
 async function startCamera() {
   const permHint = document.getElementById('permHint');
+  syncCanvasSizeToStage();
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 960 }, height: { ideal: 720 } },
+      video: { facingMode, width: { ideal: W }, height: { ideal: H } },
       audio: false
     });
   } catch (err) {
@@ -167,11 +180,13 @@ async function startCamera() {
   }
   video.srcObject = stream;
   await video.play();
-  if (!previewCtx) {
-    displayCanvas.width = W; displayCanvas.height = H;
-    previewCtx = displayCanvas.getContext('2d');
+  displayCanvas.width = W; displayCanvas.height = H;
+  if (!previewCtx) previewCtx = displayCanvas.getContext('2d');
+  if (!scenes.length || scenesBuiltFor !== W + 'x' + H) {
+    scenes = buildScenes(W, H);
+    scenesBuiltFor = W + 'x' + H;
+    renderSceneStrip();
   }
-  if (!scenes.length) { scenes = buildScenes(W, H); renderSceneStrip(); }
   showLive();
 }
 
