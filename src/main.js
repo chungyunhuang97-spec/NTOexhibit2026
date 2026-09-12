@@ -5,7 +5,7 @@ let W = 640, H = 480;             // 即時預覽解析度，實際比例會依�
 const CAPTURE_SCALE = 2;          // 拍照當下的全解析度輸出倍率
 let scenesBuiltFor = null;        // 記錄目前 scenes 是用哪個 W×H 產生的，比例變了要重畫
 
-let state = 'idle'; // idle | live | captured
+let state = 'idle'; // idle | scenePick | live | captured
 let stream = null, video = null;
 let rafId = null;
 let facingMode = 'user';
@@ -59,15 +59,15 @@ function previewLoop() {
   rafId = requestAnimationFrame(previewLoop);
 }
 
-function renderSceneStrip() {
-  const strip = document.getElementById('sceneStrip');
+function renderSceneButtons(containerId) {
+  const strip = document.getElementById(containerId);
   strip.innerHTML = '';
   scenes.forEach((s, idx) => {
     const btn = document.createElement('button');
     btn.className = 'scene-btn' + (idx === activeSceneIndex ? ' active' : '');
     const mini = document.createElement('canvas');
-    mini.width = 64; mini.height = 64;
-    mini.getContext('2d').drawImage(s.canvas, 0, 0, 64, 64);
+    mini.width = 96; mini.height = 96;
+    mini.getContext('2d').drawImage(s.canvas, 0, 0, 96, 96);
     const num = document.createElement('span');
     num.className = 'num'; num.textContent = idx + 1;
     btn.appendChild(mini); btn.appendChild(num);
@@ -77,12 +77,27 @@ function renderSceneStrip() {
   });
 }
 
+function renderAllSceneUI() {
+  renderSceneButtons('sceneGrid');
+  renderSceneButtons('sceneStrip');
+}
+
 function selectScene(idx) {
   activeSceneIndex = idx;
-  renderSceneStrip();
+  renderAllSceneUI();
   if (state === 'captured' && lastForeground) {
     recompositeWithScene(idx);
   }
+}
+
+// 場景圖只跟攝影框比例有關，跟相機串流無關，所以選場景這一步可以在還沒跟使用者要相機權限前就先做完。
+function ensureScenesBuilt() {
+  syncCanvasSizeToStage();
+  if (!scenes.length || scenesBuiltFor !== W + 'x' + H) {
+    scenes = buildScenes(W, H);
+    scenesBuiltFor = W + 'x' + H;
+  }
+  renderAllSceneUI();
 }
 
 function recompositeWithScene(idx) {
@@ -104,8 +119,24 @@ function setStatus(live) {
 function showIdle() {
   state = 'idle';
   document.getElementById('idleView').style.display = 'flex';
+  document.getElementById('scenePickView').style.display = 'none';
   displayCanvas.style.display = 'none';
   document.getElementById('resultImg').style.display = 'none';
+  document.getElementById('sceneSection').style.display = 'none';
+  document.getElementById('liveActionBar').style.display = 'none';
+  document.getElementById('resultActionBar').style.display = 'none';
+  document.getElementById('modeTag').style.display = 'none';
+  document.getElementById('statTag').style.display = 'none';
+  document.getElementById('facingBtn').style.display = 'none';
+  setStatus(false);
+}
+
+function showScenePick() {
+  state = 'scenePick';
+  document.getElementById('idleView').style.display = 'none';
+  document.getElementById('scenePickView').style.display = 'flex';
+  document.getElementById('resultImg').style.display = 'none';
+  displayCanvas.style.display = 'none';
   document.getElementById('sceneSection').style.display = 'none';
   document.getElementById('liveActionBar').style.display = 'none';
   document.getElementById('resultActionBar').style.display = 'none';
@@ -118,9 +149,10 @@ function showIdle() {
 function showLive() {
   state = 'live';
   document.getElementById('idleView').style.display = 'none';
+  document.getElementById('scenePickView').style.display = 'none';
   document.getElementById('resultImg').style.display = 'none';
   displayCanvas.style.display = 'block';
-  document.getElementById('sceneSection').style.display = 'flex';
+  document.getElementById('sceneSection').style.display = 'none';
   document.getElementById('liveActionBar').style.display = 'flex';
   document.getElementById('resultActionBar').style.display = 'none';
   document.getElementById('modeTag').style.display = 'block';
@@ -137,6 +169,7 @@ function showCaptured(dataUrl, ms, usedDevice, fellBack) {
   const img = document.getElementById('resultImg');
   img.src = dataUrl;
   img.style.display = 'block';
+  document.getElementById('scenePickView').style.display = 'none';
   displayCanvas.style.display = 'none';
   document.getElementById('sceneSection').style.display = 'flex';
   document.getElementById('liveActionBar').style.display = 'none';
@@ -182,11 +215,7 @@ async function startCamera() {
   await video.play();
   displayCanvas.width = W; displayCanvas.height = H;
   if (!previewCtx) previewCtx = displayCanvas.getContext('2d');
-  if (!scenes.length || scenesBuiltFor !== W + 'x' + H) {
-    scenes = buildScenes(W, H);
-    scenesBuiltFor = W + 'x' + H;
-    renderSceneStrip();
-  }
+  ensureScenesBuilt(); // 保險：萬一場景還沒建立過（比例跟選場景時算的不同也會在這裡重建）
   showLive();
 }
 
@@ -284,7 +313,8 @@ async function captureAndProcess() {
   showCaptured(out.toDataURL('image/png'), t1 - t0, usedDevice, fellBack);
 }
 
-document.getElementById('startBtn').addEventListener('click', startCamera);
+document.getElementById('startBtn').addEventListener('click', () => { ensureScenesBuilt(); showScenePick(); });
+document.getElementById('confirmSceneBtn').addEventListener('click', startCamera);
 document.getElementById('shutterBtn').addEventListener('click', () => { captureAndProcess(); });
 document.getElementById('retakeBtn').addEventListener('click', () => { lastForeground = null; showLive(); });
 document.getElementById('exportPngBtn').addEventListener('click', downloadResultPng);

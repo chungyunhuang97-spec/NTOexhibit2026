@@ -57,6 +57,24 @@
   }
   .stage canvas, .stage img.result{ width:100%; height:100%; object-fit:cover; display:block; }
 
+  /* 手機直式時，攝影框改用固定比例置中，避免撐成又高又窄的框，
+     導致相機畫面裁得太緊、看起來像被放大好幾倍 */
+  @media (orientation: portrait){
+    .app{ justify-content:center; }
+    .stage{ flex:0 1 auto; aspect-ratio: 3/4; max-height:100%; }
+  }
+
+  .scene-pick{
+    width:100%; height:100%; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:16px; padding:20px;
+  }
+  .scene-pick .label{ text-align:center; }
+  .scene-grid{
+    display:grid; grid-template-columns:repeat(3, minmax(72px, 110px)); gap:10px;
+    justify-content:center;
+  }
+  .scene-grid .scene-btn{ width:100%; height:auto; aspect-ratio:1; }
+
   .idle{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:10px; text-align:center; padding:20px; color:var(--text-muted);
@@ -172,10 +190,17 @@
   <div class="stage" id="stage">
     <div class="idle" id="idleView">
       <div class="ring">🤖</div>
-      <p>這一版<strong style="color:var(--text)">不需要單色背板</strong>，對著任何背景都可以測。點擊下方按鈕啟動相機。</p>
-      <p style="font-size:.66rem" id="permHint">iPad Safari 會跳出相機權限詢問，請允許使用。第一次拍照會下載 AI 模型，之後瀏覽器會快取。</p>
-      <button class="btn primary idle-start-btn" id="startBtn">啟動相機</button>
+      <p>這一版<strong style="color:var(--text)">不需要單色背板</strong>，對著任何背景都可以測。點擊下方按鈕開始。</p>
+      <p style="font-size:.66rem" id="permHint">選好場景後，iPad Safari 會跳出相機權限詢問，請允許使用。第一次拍照會下載 AI 模型，之後瀏覽器會快取。</p>
+      <button class="btn primary idle-start-btn" id="startBtn">開始</button>
     </div>
+
+    <div class="scene-pick" id="scenePickView">
+      <div class="label">選擇場景</div>
+      <div class="scene-grid" id="sceneGrid"></div>
+      <button class="btn primary idle-start-btn" id="confirmSceneBtn">拍照</button>
+    </div>
+
     <canvas id="displayCanvas" width="640" height="480" style="display:none;"></canvas>
     <img id="resultImg" class="result" style="display:none;" alt="合成結果" />
     <div class="mode-tag" id="modeTag" style="display:none;">預覽（原始畫面，未去背）</div>
