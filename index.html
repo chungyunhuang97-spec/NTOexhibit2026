@@ -35,17 +35,9 @@
 
   .app{
     flex:1; min-width:0; min-height:0;
-    display:flex; flex-direction:row; gap:12px;
+    display:flex; flex-direction:column; gap:10px;
     padding: 12px;
   }
-
-  .stage-col{ flex:1 1 auto; min-width:0; min-height:0; display:flex; flex-direction:column; gap:8px; }
-  .side-col{
-    flex:0 0 300px; max-width:320px; min-height:0;
-    display:flex; flex-direction:column; gap:8px;
-    overflow-y:auto; scrollbar-width:none;
-  }
-  .side-col::-webkit-scrollbar{ display:none; }
 
   header.top{ flex:0 0 auto; display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   header.top h1{ font-size: 1rem; font-weight:700; margin:0; letter-spacing:.02em; }
@@ -57,9 +49,9 @@
   .status .dot{ width:7px; height:7px; border-radius:50%; background:var(--border); }
   .status.live .dot{ background:var(--live); box-shadow:0 0 6px var(--live); }
 
+  /* Row 1: 攝影 / 合成畫面 */
   .stage{
     position:relative; width:100%; flex:1; min-height:0;
-    aspect-ratio: 4/3;
     background:var(--surface); border:1px solid var(--border); border-radius:18px;
     overflow:hidden; display:flex; align-items:center; justify-content:center;
   }
@@ -99,167 +91,119 @@
   .progress-fill{ height:100%; width:0%; background:var(--accent); border-radius:100px; transition:width .15s ease-out; }
   .progress-pct{ font-family:var(--mono); font-size:.85rem; color:var(--text); font-weight:700; }
 
-  section.scenes{ flex:0 0 auto; display:flex; flex-direction:column; gap:6px; }
+  /* 浮在攝影畫面下緣的操作列（快門 / 重拍・確認） */
+  .stage-controls{
+    position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:8px; z-index:5;
+  }
+  .shutter{
+    width:60px; height:60px; border-radius:50%; flex:0 0 auto; border:3px solid #fff;
+    background:transparent; cursor:pointer; position:relative;
+  }
+  .shutter::after{ content:''; position:absolute; inset:5px; border-radius:50%; background:#fff; }
+  .shutter:active::after{ inset:8px; }
+
+  .result-controls{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:rgba(21,19,15,0.72); backdrop-filter:blur(4px);
+    border:1px solid var(--border); border-radius:16px; padding:10px 14px;
+  }
+  .result-stat{ font-family:var(--mono); font-size:.64rem; color:var(--live); text-align:center; }
+  .result-stat.fallback{ color:var(--warn); }
+  .result-btn-row{ display:flex; align-items:center; gap:10px; }
+  .btn{
+    border:none; border-radius:100px; padding:10px 18px; font-size:.78rem;
+    font-weight:700; cursor:pointer; font-family:var(--sans); letter-spacing:.02em;
+  }
+  .btn.primary{ background:var(--accent); color:#0b1220; }
+  .btn.primary:active{ filter:brightness(0.92); }
+  .btn.ghost{ background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.4); color:#fff; }
+
+  /* Row 2: 場景選擇 */
+  section.scenes{ flex:0 0 auto; display:none; flex-direction:column; gap:6px; }
   .label-row{ display:flex; justify-content:space-between; align-items:baseline; }
   .label{ font-size:.64rem; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; }
-  .scene-strip{ display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .scene-strip{ display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
   .scene-strip::-webkit-scrollbar{ display:none; }
   .scene-btn{
-    flex: 0 0 auto; width:50px; height:50px; border-radius:10px; padding:0;
+    flex: 0 0 auto; width:64px; height:64px; border-radius:12px; padding:0;
     border:1.5px solid var(--border); background:var(--surface-2); cursor:pointer;
     overflow:hidden; position:relative;
   }
   .scene-btn canvas{ width:100%; height:100%; display:block; }
   .scene-btn.active{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
   .scene-btn .num{
-    position:absolute; bottom:2px; right:4px; font-family:var(--mono); font-size:.52rem;
+    position:absolute; bottom:2px; right:4px; font-family:var(--mono); font-size:.55rem;
     color:rgba(255,255,255,0.85); text-shadow:0 1px 2px rgba(0,0,0,0.6);
   }
 
-  section.controls{
-    flex:0 0 auto;
-    display:flex; flex-direction:column; gap:10px; background:var(--surface);
-    border:1px solid var(--border); border-radius:14px; padding:12px 14px;
-  }
-  .ctrl-row{ display:flex; flex-direction:column; gap:5px; }
-  .ctrl-row .name{ font-size:.74rem; color:var(--text); }
-  .ctrl-row .desc{ font-size:.62rem; color:var(--text-muted); }
-  .seg{ display:flex; gap:6px; }
-  .seg button{
-    flex:1; padding:8px 6px; border-radius:9px; border:1.5px solid var(--border);
-    background:var(--surface-2); color:var(--text-muted); font-family:var(--mono);
-    font-size:.66rem; cursor:pointer;
-  }
-  .seg button.active{ border-color:var(--accent); color:var(--text); background:var(--accent-soft); }
+  .idle-start-btn{ width:auto; padding:11px 26px; }
 
-  .shutter-row{ flex:0 0 auto; display:flex; align-items:center; justify-content:center; padding:2px 0; }
-  .shutter{
-    width:58px; height:58px; border-radius:50%; flex:0 0 auto; border:3px solid var(--accent);
-    background:var(--bg); cursor:pointer; position:relative;
-  }
-  .shutter::after{ content:''; position:absolute; inset:5px; border-radius:50%; background:var(--accent); }
-  .shutter:active::after{ inset:8px; }
   .facing-toggle{
     background:var(--surface-2); border:1px solid var(--border);
-    color:var(--text-muted); font-size:.66rem; font-family:var(--mono); padding:6px 10px;
+    color:var(--text-muted); font-size:.64rem; font-family:var(--mono); padding:5px 10px;
     border-radius:100px; cursor:pointer;
   }
 
-  .action-bar{ flex:0 0 auto; display:flex; align-items:center; gap:10px; }
-  .btn{
-    flex:1; border:none; border-radius:100px; padding:12px 16px; font-size:.8rem;
-    font-weight:700; cursor:pointer; font-family:var(--sans); letter-spacing:.02em;
-  }
-  .btn.primary{ background:var(--accent); color:#0b1220; }
-  .btn.primary:active{ filter:brightness(0.92); }
-  .btn.ghost{ background:transparent; border:1.5px solid var(--border); color:var(--text); }
-
-  .save-hint{ font-size:.64rem; color:var(--text-muted); text-align:center; line-height:1.5; }
-  .result-stat{ font-family:var(--mono); font-size:.66rem; color:var(--live); text-align:center; line-height:1.5; }
-  .result-stat.fallback{ color:var(--warn); }
-
-  details.tech{ flex:0 0 auto; font-size:.68rem; color:var(--text-muted); }
-  details.tech summary{ cursor:pointer; color:var(--text); font-size:.72rem; padding:2px 0; }
-  details.tech .body{ padding-top:6px; line-height:1.6; display:flex; flex-direction:column; gap:5px; }
-  details.tech code{ font-family:var(--mono); background:var(--surface-2); padding:1px 5px; border-radius:4px; color:var(--accent); font-size:.64rem; }
-
-  @media (max-width: 780px), (orientation: portrait){
-    .app{ flex-direction:column; overflow-y:auto; }
-    .app::-webkit-scrollbar{ display:none; }
-    .stage-col{ flex:1 1 auto; }
-    .stage{ min-height:180px; }
-    .side-col{ flex:0 0 auto; max-width:100%; max-height:none; overflow-y:visible; }
+  @media (max-width: 560px){
+    .app{ padding:10px; gap:8px; }
+    .scene-btn{ width:54px; height:54px; }
   }
 </style>
 </head>
 <body>
 <div class="app" id="app">
 
-  <div class="stage-col">
-    <header class="top">
-      <div>
-        <h1>AI 去背測試機</h1>
-        <div class="sub">拍完再處理・瀏覽器端 AI 人像分割（@imgly/background-removal）</div>
-      </div>
-      <div class="status" id="statusTag"><span class="dot"></span><span id="statusText">待機</span></div>
-    </header>
-
-    <div class="stage" id="stage">
-      <div class="idle" id="idleView">
-        <div class="ring">🤖</div>
-        <p>這一版<strong style="color:var(--text)">不需要單色背板</strong>，對著任何背景都可以測。點擊下方按鈕啟動相機。</p>
-        <p style="font-size:.66rem" id="permHint">iPad Safari 會跳出相機權限詢問，請允許使用。第一次拍照會下載 AI 模型，之後瀏覽器會快取。</p>
-        <button class="btn primary" id="startBtn" style="width:auto; padding:11px 26px;">啟動相機</button>
-      </div>
-      <canvas id="displayCanvas" width="640" height="480" style="display:none;"></canvas>
-      <img id="resultImg" class="result" style="display:none;" alt="合成結果" />
-      <div class="mode-tag" id="modeTag" style="display:none;">預覽（原始畫面，未去背）</div>
-      <div class="stat-tag" id="statTag" style="display:none;">未拍攝</div>
-      <div class="processing-veil" id="processingVeil">
-        <div class="progress-wrap">
-          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-          <div class="progress-pct" id="progressPct">0%</div>
-        </div>
-        <div id="veilText">AI 去背處理中…</div>
-      </div>
+  <header class="top">
+    <div>
+      <h1>AI 去背測試機</h1>
+      <div class="sub">拍完再處理・瀏覽器端 AI 人像分割</div>
     </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="status" id="statusTag"><span class="dot"></span><span id="statusText">待機</span></div>
+      <button class="facing-toggle" id="facingBtn" style="display:none;">切換鏡頭</button>
+    </div>
+  </header>
 
-    <div class="shutter-row" id="liveActionBar" style="display:none;">
+  <div class="stage" id="stage">
+    <div class="idle" id="idleView">
+      <div class="ring">🤖</div>
+      <p>這一版<strong style="color:var(--text)">不需要單色背板</strong>，對著任何背景都可以測。點擊下方按鈕啟動相機。</p>
+      <p style="font-size:.66rem" id="permHint">iPad Safari 會跳出相機權限詢問，請允許使用。第一次拍照會下載 AI 模型，之後瀏覽器會快取。</p>
+      <button class="btn primary idle-start-btn" id="startBtn">啟動相機</button>
+    </div>
+    <canvas id="displayCanvas" width="640" height="480" style="display:none;"></canvas>
+    <img id="resultImg" class="result" style="display:none;" alt="合成結果" />
+    <div class="mode-tag" id="modeTag" style="display:none;">預覽（原始畫面，未去背）</div>
+    <div class="stat-tag" id="statTag" style="display:none;">未拍攝</div>
+
+    <div class="stage-controls" id="liveActionBar" style="display:none;">
       <button class="shutter" id="shutterBtn" aria-label="拍照"></button>
     </div>
 
-    <div class="action-bar" id="resultActionBar" style="display:none; flex-direction:column; gap:8px;">
-      <div class="result-stat" id="resultStat">處理耗時：-- ms</div>
-      <div class="save-hint">在圖片上長按即可選擇「加入照片圖庫」儲存</div>
-      <div class="action-bar" style="width:100%;">
-        <button class="btn ghost" id="retakeBtn">重新拍攝</button>
-        <button class="btn primary" id="backToIdleBtn">回到待機畫面</button>
+    <div class="stage-controls" id="resultActionBar" style="display:none;">
+      <div class="result-controls">
+        <div class="result-stat" id="resultStat">處理耗時：-- ms</div>
+        <div class="result-btn-row">
+          <button class="btn ghost" id="retakeBtn">重新拍攝</button>
+          <button class="btn primary" id="backToIdleBtn">完成</button>
+        </div>
       </div>
+    </div>
+
+    <div class="processing-veil" id="processingVeil">
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-pct" id="progressPct">0%</div>
+      </div>
+      <div id="veilText">AI 去背處理中…</div>
     </div>
   </div>
 
-  <div class="side-col">
-    <section class="scenes" id="sceneSection" style="display:none;">
-      <div class="label-row"><span class="label">場景選擇（佔位美術）</span></div>
-      <div class="scene-strip" id="sceneStrip"></div>
-    </section>
-
-    <section class="controls" id="controlSection" style="display:none;">
-      <div class="ctrl-row">
-        <div class="name">模型品質</div>
-        <div class="desc">預設最高品質，偵測到網路/設備較弱時自動降為標準</div>
-        <div class="seg" id="modelSeg">
-          <button data-val="isnet_quint8">輕量</button>
-          <button data-val="isnet_fp16">標準</button>
-          <button data-val="isnet">最高品質</button>
-        </div>
-      </div>
-      <div class="ctrl-row">
-        <div class="name">執行裝置</div>
-        <div class="desc">預設 GPU，若該瀏覽器不支援會自動退回 CPU</div>
-        <div class="seg" id="deviceSeg">
-          <button data-val="gpu" class="active">GPU</button>
-          <button data-val="cpu">CPU</button>
-        </div>
-      </div>
-      <div class="ctrl-row" style="flex-direction:row; align-items:center; justify-content:space-between;">
-        <div class="name">鏡頭</div>
-        <button class="facing-toggle" id="facingBtn">切換前後鏡頭</button>
-      </div>
-    </section>
-
-    <details class="tech">
-      <summary>技術筆記（給小豬）</summary>
-      <div class="body">
-        <div>這版對應「售票口周圍無法佈置實體背板」的現場條件：去背改用瀏覽器端 AI 人像分割模型 <code>@imgly/background-removal</code>，不要求背景是單一顏色。</div>
-        <div>流程是「拍完再處理」：按下快門後對那張全解析度影格跑一次 AI 去背，處理中顯示<strong style="color:var(--text)">即時進度條</strong>（依模型下載/推論實際進度更新，不是假的倒數）。</div>
-        <div>「模型品質」預設最高品質，會依瀏覽器回報的網路狀況（Network Information API，iPad Safari 目前不支援此 API，故僅作為其他瀏覽器/裝置的輔助判斷）與裝置核心數自動降為標準；也可以現場手動切換比較。</div>
-        <div>「執行裝置」預設 GPU，若該瀏覽器/裝置不支援 WebGPU 或執行失敗，會自動退回 CPU 重跑一次，畫面會標示「已退回 CPU」。</div>
-        <div>拍攝畫面與輸出照片都是橫式（4:3），對應展場 iPad 橫向掛載的實際使用情境。</div>
-        <div>場景美術目前都是程式產生的佔位色塊，只是先驗證流程與去背品質，不是最終視覺。</div>
-      </div>
-    </details>
-  </div>
+  <section class="scenes" id="sceneSection">
+    <div class="label-row"><span class="label">場景選擇</span></div>
+    <div class="scene-strip" id="sceneStrip"></div>
+  </section>
 
 </div>
 <script type="module" src="/src/main.js"></script>

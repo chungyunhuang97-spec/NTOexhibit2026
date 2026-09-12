@@ -8,7 +8,9 @@ let state = 'idle'; // idle | live | captured
 let stream = null, video = null;
 let rafId = null;
 let facingMode = 'user';
-let modelChoice = pickDefaultQuality();
+
+// 模型品質／執行裝置不對外顯示控制項，背景自動判斷／自動退回。
+const modelChoice = pickDefaultQuality();
 let deviceChoice = 'gpu'; // 預設 GPU，跑不動時 captureAndProcess() 會自動退回 CPU 重試
 
 let previewCtx;
@@ -18,6 +20,9 @@ const hiCtx = hiCanvas.getContext('2d');
 const displayCanvas = document.getElementById('displayCanvas');
 let scenes = [];
 let activeSceneIndex = 0;
+
+// 拍照當下去背完成的人像（透明背景 PNG），換場景時直接重新合成，不必重跑 AI。
+let lastForeground = null; // { img, CW, CH }
 
 // 依瀏覽器回報的網路狀況（Network Information API，iPad Safari 不支援，會直接略過這項判斷）
 // 與裝置核心數，粗略判斷「網路或設備比較弱」，類似手機訊號差時自動從 5G 降到 4G。
@@ -60,27 +65,33 @@ function renderSceneStrip() {
     const btn = document.createElement('button');
     btn.className = 'scene-btn' + (idx === activeSceneIndex ? ' active' : '');
     const mini = document.createElement('canvas');
-    mini.width = 50; mini.height = 50;
-    mini.getContext('2d').drawImage(s.canvas, 0, 0, 50, 50);
+    mini.width = 64; mini.height = 64;
+    mini.getContext('2d').drawImage(s.canvas, 0, 0, 64, 64);
     const num = document.createElement('span');
     num.className = 'num'; num.textContent = idx + 1;
     btn.appendChild(mini); btn.appendChild(num);
     btn.title = s.name;
-    btn.addEventListener('click', () => { activeSceneIndex = idx; renderSceneStrip(); });
+    btn.addEventListener('click', () => selectScene(idx));
     strip.appendChild(btn);
   });
 }
 
-function setSeg(containerId, value, onChange) {
-  const el = document.getElementById(containerId);
-  [...el.querySelectorAll('button')].forEach((b) => {
-    b.classList.toggle('active', b.dataset.val === value);
-    b.onclick = () => {
-      [...el.querySelectorAll('button')].forEach((x) => x.classList.remove('active'));
-      b.classList.add('active');
-      onChange(b.dataset.val);
-    };
-  });
+function selectScene(idx) {
+  activeSceneIndex = idx;
+  renderSceneStrip();
+  if (state === 'captured' && lastForeground) {
+    recompositeWithScene(idx);
+  }
+}
+
+function recompositeWithScene(idx) {
+  const { img, CW, CH } = lastForeground;
+  const out = document.createElement('canvas');
+  out.width = CW; out.height = CH;
+  const octx = out.getContext('2d');
+  octx.drawImage(scenes[idx].canvas, 0, 0, CW, CH);
+  octx.drawImage(img, 0, 0, CW, CH);
+  document.getElementById('resultImg').src = out.toDataURL('image/png');
 }
 
 function setStatus(live) {
@@ -95,11 +106,11 @@ function showIdle() {
   displayCanvas.style.display = 'none';
   document.getElementById('resultImg').style.display = 'none';
   document.getElementById('sceneSection').style.display = 'none';
-  document.getElementById('controlSection').style.display = 'none';
   document.getElementById('liveActionBar').style.display = 'none';
   document.getElementById('resultActionBar').style.display = 'none';
   document.getElementById('modeTag').style.display = 'none';
   document.getElementById('statTag').style.display = 'none';
+  document.getElementById('facingBtn').style.display = 'none';
   setStatus(false);
 }
 
@@ -109,12 +120,12 @@ function showLive() {
   document.getElementById('resultImg').style.display = 'none';
   displayCanvas.style.display = 'block';
   document.getElementById('sceneSection').style.display = 'flex';
-  document.getElementById('controlSection').style.display = 'flex';
   document.getElementById('liveActionBar').style.display = 'flex';
   document.getElementById('resultActionBar').style.display = 'none';
   document.getElementById('modeTag').style.display = 'block';
   document.getElementById('statTag').style.display = 'block';
   document.getElementById('statTag').textContent = '未拍攝';
+  document.getElementById('facingBtn').style.display = 'inline-block';
   setStatus(true);
   rafId = requestAnimationFrame(previewLoop);
 }
@@ -126,14 +137,15 @@ function showCaptured(dataUrl, ms, usedDevice, fellBack) {
   img.src = dataUrl;
   img.style.display = 'block';
   displayCanvas.style.display = 'none';
+  document.getElementById('sceneSection').style.display = 'flex';
   document.getElementById('liveActionBar').style.display = 'none';
   document.getElementById('resultActionBar').style.display = 'flex';
   document.getElementById('modeTag').style.display = 'none';
   document.getElementById('statTag').style.display = 'none';
+  document.getElementById('facingBtn').style.display = 'none';
   const stat = document.getElementById('resultStat');
   stat.classList.toggle('fallback', fellBack);
-  stat.textContent = '處理耗時：' + ms.toFixed(0) + ' ms ・ 模型：' + modelChoice +
-    ' ・ 裝置：' + usedDevice + (fellBack ? '（GPU 不支援，已自動退回 CPU）' : '');
+  stat.textContent = '處理耗時：' + ms.toFixed(0) + ' ms' + (fellBack ? '（GPU 不支援，已自動退回 CPU）' : '');
   setStatus(false);
 }
 
@@ -241,6 +253,7 @@ async function captureAndProcess() {
   const fgImg = new Image();
   const fgUrl = URL.createObjectURL(resultBlob);
   await new Promise((resolve, reject) => { fgImg.onload = resolve; fgImg.onerror = reject; fgImg.src = fgUrl; });
+  lastForeground = { img: fgImg, CW, CH };
 
   const out = document.createElement('canvas');
   out.width = CW; out.height = CH;
@@ -258,15 +271,12 @@ async function captureAndProcess() {
 
 document.getElementById('startBtn').addEventListener('click', startCamera);
 document.getElementById('shutterBtn').addEventListener('click', () => { captureAndProcess(); });
-document.getElementById('retakeBtn').addEventListener('click', showLive);
-document.getElementById('backToIdleBtn').addEventListener('click', () => { stopCamera(); showIdle(); });
+document.getElementById('retakeBtn').addEventListener('click', () => { lastForeground = null; showLive(); });
+document.getElementById('backToIdleBtn').addEventListener('click', () => { lastForeground = null; stopCamera(); showIdle(); });
 document.getElementById('facingBtn').addEventListener('click', () => {
   facingMode = facingMode === 'user' ? 'environment' : 'user';
   stopCamera();
   startCamera();
 });
-
-setSeg('modelSeg', modelChoice, (v) => { modelChoice = v; });
-setSeg('deviceSeg', deviceChoice, (v) => { deviceChoice = v; });
 
 showIdle();
