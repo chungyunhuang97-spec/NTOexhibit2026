@@ -1,4 +1,4 @@
-import removeBackground from '@imgly/background-removal';
+import { removeBackground } from '@imgly/background-removal';
 import { buildScenes } from './scenes.js';
 
 const W = 480, H = 640;          // 即時預覽解析度（原始畫面，不做任何處理，開銷極低）
