@@ -351,11 +351,47 @@ async function captureAndProcess() {
   showCaptured(resultDataUrl, t1 - t0, usedDevice, fellBack);
 }
 
+// 列印後如果使用者沒有主動點「回到待機畫面」，倒數這段時間就自動跳回選場景，
+// 避免展場前一位使用者印完就走、畫面卡在結果頁擋住下一位。
+const AUTO_RETURN_MS = 60000;
+let autoReturnTimer = null;
+let autoReturnInterval = null;
+
+function goToIdle() {
+  lastForeground = null;
+  stopCamera();
+  ensureScenesBuilt();
+  showScenePick();
+}
+
+function clearAutoReturn() {
+  clearTimeout(autoReturnTimer);
+  clearInterval(autoReturnInterval);
+  autoReturnTimer = null;
+  autoReturnInterval = null;
+  document.getElementById('autoReturnHint').style.display = 'none';
+}
+
+function scheduleAutoReturn() {
+  clearAutoReturn();
+  const hint = document.getElementById('autoReturnHint');
+  let remaining = Math.ceil(AUTO_RETURN_MS / 1000);
+  const render = () => { hint.textContent = remaining + ' 秒後自動返回選擇畫面'; };
+  hint.style.display = 'block';
+  render();
+  autoReturnInterval = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) { clearAutoReturn(); return; }
+    render();
+  }, 1000);
+  autoReturnTimer = setTimeout(goToIdle, AUTO_RETURN_MS);
+}
+
 document.getElementById('confirmSceneBtn').addEventListener('click', startCamera);
 document.getElementById('shutterBtn').addEventListener('click', () => { captureAndProcess(); });
-document.getElementById('retakeBtn').addEventListener('click', () => { lastForeground = null; showLive(); });
-document.getElementById('printBtn').addEventListener('click', () => { window.print(); });
-document.getElementById('backToIdleBtn').addEventListener('click', () => { lastForeground = null; stopCamera(); ensureScenesBuilt(); showScenePick(); });
+document.getElementById('retakeBtn').addEventListener('click', () => { clearAutoReturn(); lastForeground = null; showLive(); });
+document.getElementById('printBtn').addEventListener('click', () => { window.print(); scheduleAutoReturn(); });
+document.getElementById('backToIdleBtn').addEventListener('click', () => { clearAutoReturn(); goToIdle(); });
 
 document.getElementById('facingBtn').addEventListener('click', () => {
   facingMode = facingMode === 'user' ? 'environment' : 'user';

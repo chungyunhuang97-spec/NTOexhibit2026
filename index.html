@@ -2,7 +2,13 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<!-- 展場用「加入主畫面」開啟時，這三行讓它變成無網址列/無分頁列的
+     Web App（standalone）模式；要完全擋掉離開手勢，還是要靠 iOS
+     「輔助使用（Guided Access）」，這裡的 meta tag 只負責藏 Safari 介面。 -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="AI 去背測試機" />
 <title>AI 去背測試機</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -140,6 +146,9 @@
     background:none; border:none; color:rgba(255,255,255,0.6); font-size:.66rem;
     font-family:var(--sans); text-decoration:underline; cursor:pointer; padding:2px;
   }
+  .auto-return-hint{
+    font-family:var(--mono); font-size:.6rem; color:var(--warn); text-align:center;
+  }
 
   /* Row 2: 場景選擇 */
   section.scenes{ flex:0 0 auto; display:none; flex-direction:column; gap:6px; }
@@ -233,6 +242,7 @@
           <button class="btn primary" id="printBtn">列印</button>
         </div>
         <button class="back-to-idle-link" id="backToIdleBtn">回到待機畫面</button>
+        <div class="auto-return-hint" id="autoReturnHint" style="display:none;"></div>
       </div>
     </div>
 
