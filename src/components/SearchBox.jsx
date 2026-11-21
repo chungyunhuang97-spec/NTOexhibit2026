@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Search, X, ArrowLeft, Loader2 } from 'lucide-react';
-import { suggest, searchFull } from '../lib/search';
+import { Search, X, ArrowLeft, Loader2, ExternalLink, Link2 } from 'lucide-react';
+import { suggest, searchFull, fromGoogleLink } from '../lib/search';
+import { googleSearchUrl, parseGoogleMapsUrl } from '../lib/links';
 import { CATEGORIES } from '../lib/constants';
 
 /**
  * Google Maps 風格的地點搜尋。
  * onPick(result) 選擇結果；fullscreen 為手機全螢幕模式。
  */
-export default function SearchBox({ onPick, bias, fullscreen = false, onClose, placeholder = '搜尋地點，例如 新天鵝堡、Zeil' }) {
+export default function SearchBox({ onPick, bias, fullscreen = false, onClose, placeholder = '搜尋地點，或貼上 Google Maps 連結' }) {
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,6 +16,7 @@ export default function SearchBox({ onPick, bias, fullscreen = false, onClose, p
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [source, setSource] = useState('photon');
+  const [linkHint, setLinkHint] = useState(null);
   const inputRef = useRef(null);
   const abortRef = useRef(null);
   const wrapRef = useRef(null);
@@ -26,9 +28,35 @@ export default function SearchBox({ onPick, bias, fullscreen = false, onClose, p
   // 即時聯想：停止輸入 350ms 後查詢
   useEffect(() => {
     const term = q.trim();
+    setLinkHint(null);
     if (term.length < 2) {
       setResults([]);
       setError(null);
+      return;
+    }
+    // 貼上 Google Maps 連結
+    const parsed = parseGoogleMapsUrl(term);
+    if (parsed) {
+      if (parsed.short) {
+        setResults([]);
+        setLinkHint('這是手機分享的短網址，無法直接讀取。請在瀏覽器打開它，再複製網址列的完整連結貼上；或改搜尋地點的德文名稱。');
+        setOpen(true);
+        return;
+      }
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      setLoading(true);
+      setError(null);
+      fromGoogleLink(parsed, { signal: ctrl.signal })
+        .then((r) => {
+          setResults(r);
+          setSource('google');
+          setActive(0);
+          setOpen(true);
+        })
+        .catch((e) => e.name !== 'AbortError' && setError('無法讀取這個連結'))
+        .finally(() => !ctrl.signal.aborted && setLoading(false));
       return;
     }
     const t = setTimeout(async () => {
@@ -101,7 +129,7 @@ export default function SearchBox({ onPick, bias, fullscreen = false, onClose, p
       setActive((a) => Math.max(a - 1, 0));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (open && results[active] && source === 'nominatim') pick(results[active]);
+      if (open && results[active] && source !== 'photon') pick(results[active]);
       else runFull();
     } else if (e.key === 'Escape') {
       setOpen(false);
@@ -141,10 +169,11 @@ export default function SearchBox({ onPick, bias, fullscreen = false, onClose, p
       </div>
       {showList && (
         <div className="search-results" role="listbox">
+          {linkHint && <div className="empty">{linkHint}</div>}
           {error && <div className="empty">{error}</div>}
-          {!error && !loading && results.length === 0 && (
+          {!error && !linkHint && !loading && results.length === 0 && (
             <div className="empty">
-              找不到結果。試試德文或捷克文原名，或按 Enter 進階搜尋。
+              找不到結果。試試德文或捷克文原名、按 Enter 進階搜尋，或用下方按鈕改在 Google Maps 查。
             </div>
           )}
           {results.map((r, i) => {
@@ -173,13 +202,25 @@ export default function SearchBox({ onPick, bias, fullscreen = false, onClose, p
             );
           })}
           <div className="search-foot">
-            <span>{source === 'photon' ? '即時建議' : '進階搜尋結果'}・範圍：德國、捷克</span>
+            <span>{{ photon: '即時建議', nominatim: '進階搜尋結果', google: 'Google Maps 連結' }[source]}・範圍：德國、捷克</span>
             {source === 'photon' && (
               <button className="btn ghost sm" onClick={runFull}>
                 進階搜尋
               </button>
             )}
           </div>
+          {source !== 'google' && !linkHint && (
+            <div className="search-alt">
+              <a className="btn sm block" href={googleSearchUrl(q.trim())} target="_blank" rel="noreferrer">
+                <ExternalLink size={14} />
+                改在 Google Maps 搜尋「{q.trim()}」
+              </a>
+              <div className="xs faint row" style={{ marginTop: 8, gap: 6, alignItems: 'flex-start' }}>
+                <Link2 size={13} style={{ flex: 'none', marginTop: 3 }} />
+                <span>在 Google Maps 找到後，把瀏覽器網址列的連結貼到搜尋框，就能直接加入行程；或用查到的德文原名再搜一次。</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -63,18 +63,129 @@ export const ALIASES = {
   '巴黎大街': 'Pařížská',
   '列儂牆': 'Lennonova zeď',
   '佩特任山': 'Petřín',
-  '猶太區': 'Josefov'
+  '猶太區': 'Josefov',
+
+  // ---- 法蘭克福（補充）----
+  '法蘭克福大教堂': 'Kaiserdom St. Bartholomäus',
+  '聖巴托洛繆大教堂': 'Kaiserdom St. Bartholomäus',
+  '保羅教堂': 'Paulskirche',
+  '歐元標誌': 'Euro-Skulptur',
+  '歐元雕塑': 'Euro-Skulptur',
+  '棕櫚園': 'Palmengarten',
+  '森根堡自然博物館': 'Senckenberg Naturmuseum',
+  '博物館堤岸': 'Museumsufer',
+  '美茵河': 'Mainufer',
+  '歌德大街': 'Goethestraße Frankfurt',
+  '豪普特瓦赫': 'Hauptwache',
+  '主哨站': 'Hauptwache',
+  '老薩克森豪森': 'Alt-Sachsenhausen',
+  '法蘭克福南站': 'Frankfurt (Main) Südbahnhof',
+  '展覽中心': 'Messe Frankfurt',
+  '法蘭克福國際紡織展': 'Messe Frankfurt',
+  '法蘭克福紡織展': 'Messe Frankfurt',
+  '家用紡織品展': 'Messe Frankfurt',
+  'heimtextil': 'Messe Frankfurt',
+  '蘋果酒館': 'Apfelweinwirtschaft',
+  '綠醬': 'Grüne Soße',
+  // ---- 慕尼黑（補充）----
+  '慕尼黑機場': 'Flughafen München',
+  '卡爾廣場': 'Karlsplatz (Stachus)',
+  '卡爾門': 'Karlstor',
+  '奧迪安廣場': 'Odeonsplatz',
+  '統帥堂': 'Feldherrnhalle',
+  '勝利門': 'Siegestor',
+  '宮廷花園': 'Hofgarten München',
+  '皇宮花園': 'Hofgarten München',
+  '老彼得教堂': 'Alter Peter',
+  '聖彼得教堂': 'Alter Peter',
+  '新繪畫陳列館': 'Neue Pinakothek',
+  '現代藝術陳列館': 'Pinakothek der Moderne',
+  '寶馬博物館': 'BMW Museum',
+  'BMW博物館': 'BMW Museum',
+  '奧林匹克公園': 'Olympiapark',
+  '奧林匹克塔': 'Olympiaturm',
+  '安聯球場': 'Allianz Arena',
+  '考芬格大街': 'Kaufingerstraße',
+  '考芬格街': 'Kaufingerstraße',
+  '諾伊豪瑟大街': 'Neuhauser Straße',
+  '馬克西米利安大街': 'Maximilianstraße München',
+  '精品大街': 'Maximilianstraße München',
+  '施瓦賓': 'Schwabing',
+  '達爾邁爾': 'Dallmayr',
+  '歐柏波林格': 'Oberpollinger',
+  '路德維希貝克': 'Ludwig Beck',
+  '白香腸': 'Weißwurst',
+  '奧古斯丁啤酒館': 'Augustiner-Keller',
+  '寧芬堡宮': 'Schloss Nymphenburg',
+  '楚格峰': 'Zugspitze',
+  '國王湖': 'Königssee',
+  '英格斯塔購物中心': 'Ingolstadt Village',
+  '英格爾施塔特購物村': 'Ingolstadt Village',
+  '暢貨中心': 'Ingolstadt Village',
+  '奧迪博物館': 'Audi museum mobile',
+  '霍恩施萬高': 'Hohenschwangau',
+  '新天鵝城堡': 'Schloss Neuschwanstein',
+  // ---- 布拉格（補充）----
+  '舊皇宮': 'Starý královský palác',
+  '聖喬治教堂': 'Bazilika svatého Jiří',
+  '聖維特教堂': 'Katedrála svatého Víta',
+  '斯特拉霍夫修道院': 'Strahovský klášter',
+  '羅瑞塔教堂': 'Loreta',
+  '聖尼古拉教堂': 'Kostel svatého Mikuláše',
+  '火藥塔': 'Prašná brána',
+  '慕夏博物館': 'Muchovo muzeum',
+  '卡夫卡博物館': 'Muzeum Franze Kafky',
+  '國家劇院': 'Národní divadlo',
+  '魯道夫音樂廳': 'Rudolfinum',
+  '伏爾塔瓦河': 'Vltava',
+  '共和國廣場': 'náměstí Republiky',
+  '哈維爾市集': 'Havelské tržiště',
+  '坎帕島': 'Kampa',
+  '溫賽斯拉斯廣場': 'Václavské náměstí',
+  '新城': 'Nové Město',
+  '舊城': 'Staré Město',
+  '城堡區': 'Hradčany',
+  '布拉格動物園': 'Zoo Praha',
+  '佩特任瞭望塔': 'Petřínská rozhledna',
+  '菠丹妮': 'Botanicus',
+  '曼菲蘿': 'Manufaktura',
+  '摩瑟水晶': 'Moser',
+  '帕拉迪姆': 'Palladium',
+  '帕拉丁購物中心': 'Palladium',
+  '巴黎街': 'Pařížská',
+  '黑啤酒屋': 'U Fleků',
+  '盧浮咖啡': 'Café Louvre',
+  '羅浮咖啡館': 'Café Louvre',
+  '斯拉維亞咖啡館': 'Kavárna Slavia',
+  // ---- 連鎖店 ----
+  'dm藥妝': 'dm-drogerie markt',
+  'dm 藥妝': 'dm-drogerie markt',
+  '羅斯曼': 'Rossmann',
+  'Rossmann藥妝': 'Rossmann',
+  '藥妝店': 'dm-drogerie markt',
+  '百貨公司': 'Galeria',
+  '卡爾施塔特': 'Galeria',
+  '超市': 'REWE'
 };
 
-/** 把查詢轉成原名；完全符合優先，其次包含 */
+const LOWER = Object.fromEntries(Object.entries(ALIASES).map(([k, v]) => [k.toLowerCase(), v]));
+const KEYS = Object.keys(LOWER).filter((k) => k.length >= 2).sort((a, b) => b.length - a.length);
+
+/** 把查詢轉成原名：完全符合優先；否則把句中所有認得的中文名稱都換成原名 */
 export function translateQuery(q) {
   const t = q.trim();
-  if (ALIASES[t]) return { query: ALIASES[t], zh: t };
-  const key = Object.keys(ALIASES)
-    .filter((k) => k.length >= 2 && t.includes(k))
-    .sort((a, b) => b.length - a.length)[0];
-  if (key) return { query: t.replace(key, ` ${ALIASES[key]} `).trim(), zh: null };
-  return { query: t, zh: null };
+  const lower = t.toLowerCase();
+  if (LOWER[lower]) return { query: LOWER[lower], zh: t };
+  let out = lower;
+  let hit = false;
+  for (const k of KEYS) {
+    if (out.includes(k)) {
+      out = out.split(k).join(` ${LOWER[k]} `);
+      hit = true;
+    }
+  }
+  if (!hit) return { query: t, zh: null };
+  return { query: out.replace(/\s+/g, ' ').trim(), zh: null };
 }
 
 export const hasCJK = (s) => /[㐀-鿿]/.test(s);
