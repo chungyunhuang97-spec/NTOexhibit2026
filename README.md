@@ -27,17 +27,13 @@ npm install
 npm run dev
 ```
 
-## 啟用三人共享編輯（Supabase）
+## 三人共享編輯（Supabase）
 
-沒有設定時是「本機模式」，資料只存在當下的瀏覽器。
+已接上 Supabase 的 **wat-app** 專案（`.env.production`），行程用的資料表與函式都加了 `trip_` 前綴，和 wat-app 原本的資料互不影響。結構在 `supabase/schema.sql`。
 
-1. 在 Supabase 建立專案（區域建議 `eu-central-1` 法蘭克福）
-2. 到 SQL Editor 貼上並執行 `supabase/schema.sql`
-3. 在部署平台（Vercel）設定環境變數，值在 Project Settings → API：
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`（publishable key）
-4. 重新部署，打開網站 → 右上角設定 → 設定編輯 PIN →「建立共享旅程」
-5. 把網址（含 `?t=...`）和 PIN 傳給佑辰和弟弟；第一次編輯時輸入 PIN 即可
+1. 部署後打開網站 → 右上角設定 → 設定編輯 PIN →「建立共享旅程」
+2. 把網址（含 `?t=...`）和 PIN 傳給佑辰和弟弟；第一次編輯時輸入 PIN 即可
+3. 之後都用這個網址開啟（可加到手機主畫面）
 
 安全設計：表格不開放直接存取，所有讀寫都經過資料庫函式；讀取需要旅程連結，寫入需要 PIN（bcrypt 雜湊）。即時同步使用 Supabase Realtime broadcast。
 

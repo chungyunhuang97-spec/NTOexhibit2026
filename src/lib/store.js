@@ -98,7 +98,7 @@ export const store = {
 
   async refresh() {
     if (state.sync.mode !== 'remote') return;
-    const { data, error } = await supabase.rpc('get_trip', { p_trip: state.sync.tripId });
+    const { data, error } = await supabase.rpc('trip_get', { p_trip: state.sync.tripId });
     if (error) {
       setSync({ status: navigator.onLine ? 'error' : 'offline', error: error.message });
       return;
@@ -192,11 +192,11 @@ export const store = {
     setSync({ status: 'saving' });
     try {
       if (upserts.length) {
-        const { error } = await supabase.rpc('upsert_items', { p_trip: state.sync.tripId, p_pin: pin, p_items: upserts });
+        const { error } = await supabase.rpc('trip_upsert_items', { p_trip: state.sync.tripId, p_pin: pin, p_items: upserts });
         if (error) throw error;
       }
       if (deletes.length) {
-        const { error } = await supabase.rpc('delete_items', { p_trip: state.sync.tripId, p_pin: pin, p_ids: deletes });
+        const { error } = await supabase.rpc('trip_delete_items', { p_trip: state.sync.tripId, p_pin: pin, p_ids: deletes });
         if (error) throw error;
       }
       upserts.forEach((i) => {
@@ -221,7 +221,7 @@ export const store = {
   },
 
   async enterPin(pin) {
-    const { data, error } = await supabase.rpc('check_pin', { p_trip: state.sync.tripId, p_pin: pin });
+    const { data, error } = await supabase.rpc('trip_check_pin', { p_trip: state.sync.tripId, p_pin: pin });
     if (error) throw new Error(error.message);
     if (!data) return false;
     LS.set(pinKey(state.sync.tripId), pin);
@@ -233,7 +233,7 @@ export const store = {
   /** 把目前資料上傳成新的共享旅程，回傳分享連結 */
   async createShared(pin) {
     if (!supabase) throw new Error('尚未設定 Supabase');
-    const { data, error } = await supabase.rpc('create_trip', { p_pin: pin, p_items: Object.values(state.items) });
+    const { data, error } = await supabase.rpc('trip_create', { p_pin: pin, p_items: Object.values(state.items) });
     if (error) throw new Error(error.message);
     LS.set(pinKey(data), pin);
     LS.set(`trip:${data}:items`, Object.values(state.items));
