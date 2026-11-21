@@ -7,7 +7,7 @@ const RMV = 'https://www.rmv.de/c/en/tickets';
 const MVV = 'https://www.mvv-muenchen.de/en/tickets-and-fares/index.html';
 const PID = 'https://pid.cz/en/tickets/';
 
-export const SEED_VERSION = 2;
+export const SEED_VERSION = 3;
 
 // 已在使用中的旅程，開啟時會自動套用這些更新（只覆蓋列出的項目，其他修改保留）
 export const SEED_UPDATES = {
@@ -15,7 +15,8 @@ export const SEED_UPDATES = {
     upsert: ['meta', 'l_fra', 'l_muc', 'l_prg', 'd0120', 'd0121', 'd0122', 'd0123', 'g_out', 'g_muc_arr', 'g_muc_day', 'g_pid',
       'g_prg_air', 'g_return', 's_kampa', 's_louvre', 's_farewell', 'b_return', 'b_return_meal', 'b_l_fra', 'b_l_muc', 'b_l_prg'],
     remove: []
-  }
+  },
+  3: { upsert: [], remove: [], metaFields: ['travelers'] }
 };
 
 export const seedItems = [
@@ -24,10 +25,10 @@ export const seedItems = [
     kind: 'meta',
     title: '德國・布拉格 2027',
     subtitle: 'Heimtextil 參展與冬季散步',
-    travelers: ['佑辰', '弟弟'],
+    travelers: ['我', '定翰'],
     start: '2027-01-11',
     end: '2027-01-23',
-    seedVersion: 2,
+    seedVersion: 3,
     rates: { EUR: 35, CZK: 1.4 }
   },
 

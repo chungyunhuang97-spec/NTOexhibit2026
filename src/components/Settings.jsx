@@ -118,7 +118,7 @@ export default function Settings({ meta, onClose }) {
               雲端共享旅程・{statusText}
             </div>
           </div>
-          <p className="small muted">把連結傳給佑辰和弟弟，第一次編輯時輸入 PIN，三人即可同步編輯。</p>
+          <p className="small muted">把連結傳給同行的人，第一次編輯時輸入 PIN，就能一起同步編輯。</p>
           <div className="row" style={{ marginBottom: 8 }}>
             <input className="input xs" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
             <button className="btn" onClick={copy}>
@@ -142,7 +142,7 @@ export default function Settings({ meta, onClose }) {
           </div>
           {sync.configured ? (
             <>
-              <p className="small muted">設定一組 4 位以上的 PIN，把目前的行程上傳成共享旅程。之後把連結和 PIN 給佑辰和弟弟就能一起編輯。</p>
+              <p className="small muted">設定一組 4 位以上的 PIN，把目前的行程上傳成共享旅程。之後把連結和 PIN 傳給同行的人，就能一起編輯。</p>
               {err && <div className="notice">{err}</div>}
               <div className="row">
                 <input
@@ -159,7 +159,7 @@ export default function Settings({ meta, onClose }) {
             </>
           ) : (
             <p className="small muted">
-              尚未設定 Supabase。部署時加上環境變數 VITE_SUPABASE_URL 與 VITE_SUPABASE_ANON_KEY，並在 Supabase 執行 supabase/schema.sql，就能啟用三人共享編輯。
+              尚未設定 Supabase。部署時加上環境變數 VITE_SUPABASE_URL 與 VITE_SUPABASE_ANON_KEY，並在 Supabase 執行 supabase/schema.sql，就能啟用共享編輯。
             </p>
           )}
         </>

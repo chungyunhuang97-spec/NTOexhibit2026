@@ -114,7 +114,11 @@ export const store = {
       u.remove.forEach((id) => removes.add(id));
     }
     // meta 只更新日期與版本，保留使用者改過的標題與匯率
-    upserts.meta = { ...meta, end: seedMap.meta.end, seedVersion: SEED_VERSION };
+    const metaFields = {};
+    for (let v = from + 1; v <= SEED_VERSION; v++) {
+      (SEED_UPDATES[v]?.metaFields || []).forEach((k) => (metaFields[k] = seedMap.meta[k]));
+    }
+    upserts.meta = { ...meta, ...metaFields, end: seedMap.meta.end, seedVersion: SEED_VERSION };
     this.upsert(Object.values(upserts));
     if (removes.size) this.remove([...removes]);
   },
