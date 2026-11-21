@@ -145,3 +145,50 @@ export async function searchFull(q, { signal } = {}) {
   const data = await res.json();
   return dedupe(data.map(fromNominatim)).map((r, i) => ({ ...r, nameZh: r.nameZh || (i === 0 ? zh : null) }));
 }
+
+/** 由座標反查地址（Google Maps 連結匯入時使用，單次呼叫） */
+export async function reverse(lat, lng, { signal } = {}) {
+  const params = new URLSearchParams({
+    format: 'jsonv2',
+    lat: String(lat),
+    lon: String(lng),
+    addressdetails: '1',
+    namedetails: '1',
+    zoom: '18',
+    'accept-language': 'de'
+  });
+  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`, { signal, headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`Nominatim ${res.status}`);
+  const r = await res.json();
+  if (!r || r.error) return null;
+  return fromNominatim(r);
+}
+
+/** 把 Google Maps 連結轉成搜尋結果 */
+export async function fromGoogleLink(parsed, { signal } = {}) {
+  if (parsed.lat == null) {
+    // 只有名稱：用名稱搜尋
+    const list = await searchFull(parsed.name, { signal });
+    return list.slice(0, 5);
+  }
+  let rev = null;
+  try {
+    rev = await reverse(parsed.lat, parsed.lng, { signal });
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+  }
+  return [
+    {
+      key: `gmaps-${parsed.lat}-${parsed.lng}`,
+      osmId: null,
+      nameLocal: parsed.name || rev?.nameLocal || '未命名地點',
+      nameZh: null,
+      address: rev?.address || '',
+      lat: parsed.lat,
+      lng: parsed.lng,
+      category: rev?.category && rev.category !== 'other' ? rev.category : 'landmark',
+      typeLabel: '來自 Google Maps 連結',
+      country: rev?.country || ''
+    }
+  ];
+}
