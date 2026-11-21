@@ -3,7 +3,7 @@
 // - 有旅程 ID：讀取雲端，寫入需 PIN，透過 Realtime broadcast 即時通知其他裝置
 import { useSyncExternalStore } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { seedItems } from '../data/seed';
+import { seedItems, SEED_VERSION, SEED_UPDATES } from '../data/seed';
 
 const SB_URL = import.meta.env.VITE_SUPABASE_URL;
 const SB_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -80,6 +80,7 @@ export const store = {
       emit({ items: toMap(local || seedItems) });
       setSync({ mode: 'local', tripId: null, canEdit: true, status: 'idle' });
       if (!local) persist();
+      else this.applySeedUpdates();
       return;
     }
     const pin = LS.get(pinKey(tripId), null);
@@ -94,6 +95,28 @@ export const store = {
       if (document.visibilityState === 'visible') this.refresh();
     });
     if (Object.keys(pending.upserts).length || pending.deletes.length) this.flush();
+    if (state.sync.canEdit) this.applySeedUpdates();
+  },
+
+  /** 把預設資料的更新（新航班、飯店等）套用到已在使用的旅程，只覆蓋指定項目 */
+  applySeedUpdates() {
+    const meta = state.items.meta;
+    if (!meta || !state.sync.canEdit) return;
+    const from = meta.seedVersion || 1;
+    if (from >= SEED_VERSION) return;
+    const seedMap = toMap(seedItems);
+    const upserts = {};
+    const removes = new Set();
+    for (let v = from + 1; v <= SEED_VERSION; v++) {
+      const u = SEED_UPDATES[v];
+      if (!u) continue;
+      u.upsert.forEach((id) => seedMap[id] && (upserts[id] = seedMap[id]));
+      u.remove.forEach((id) => removes.add(id));
+    }
+    // meta 只更新日期與版本，保留使用者改過的標題與匯率
+    upserts.meta = { ...meta, end: seedMap.meta.end, seedVersion: SEED_VERSION };
+    this.upsert(Object.values(upserts));
+    if (removes.size) this.remove([...removes]);
   },
 
   async refresh() {
@@ -227,6 +250,7 @@ export const store = {
     LS.set(pinKey(state.sync.tripId), pin);
     setSync({ canEdit: true, error: null });
     this.flush();
+    this.applySeedUpdates();
     return true;
   },
 

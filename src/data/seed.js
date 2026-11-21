@@ -7,7 +7,16 @@ const RMV = 'https://www.rmv.de/c/en/tickets';
 const MVV = 'https://www.mvv-muenchen.de/en/tickets-and-fares/index.html';
 const PID = 'https://pid.cz/en/tickets/';
 
-export const SEED_VERSION = 1;
+export const SEED_VERSION = 2;
+
+// 已在使用中的旅程，開啟時會自動套用這些更新（只覆蓋列出的項目，其他修改保留）
+export const SEED_UPDATES = {
+  2: {
+    upsert: ['meta', 'l_fra', 'l_muc', 'l_prg', 'd0120', 'd0121', 'd0122', 'd0123', 'g_out', 'g_muc_arr', 'g_muc_day', 'g_pid',
+      'g_prg_air', 'g_return', 's_kampa', 's_louvre', 's_farewell', 'b_return', 'b_return_meal', 'b_l_fra', 'b_l_muc', 'b_l_prg'],
+    remove: []
+  }
+};
 
 export const seedItems = [
   {
@@ -17,14 +26,15 @@ export const seedItems = [
     subtitle: 'Heimtextil 參展與冬季散步',
     travelers: ['佑辰', '弟弟'],
     start: '2027-01-11',
-    end: '2027-01-22',
+    end: '2027-01-23',
+    seedVersion: 2,
     rates: { EUR: 35, CZK: 1.4 }
   },
 
   // ---------- 住宿 ----------
-  { id: 'l_fra', kind: 'lodging', city: 'FRA', name: '法蘭克福住宿（待填飯店名稱）', address: '', lat: null, lng: null, checkIn: '2027-01-12', checkOut: '2027-01-14', status: 'booked', ref: '', note: '已訂。紅眼班機早上抵達，先詢問飯店能否提早寄放行李。' },
-  { id: 'l_muc', kind: 'lodging', city: 'MUC', name: '慕尼黑住宿（待填飯店名稱）', address: '', lat: null, lng: null, checkIn: '2027-01-14', checkOut: '2027-01-17', status: 'booked', ref: '', note: '已訂。' },
-  { id: 'l_prg', kind: 'lodging', city: 'PRG', name: '布拉格住宿（未訂）', address: '', lat: null, lng: null, checkIn: '2027-01-17', checkOut: '2027-01-21', status: 'todo', ref: '', note: '建議住舊城區（Staré Město）或新城區（Nové Město）靠近共和國廣場，步行可到逛街區與查理大橋。' },
+  { id: 'l_fra', kind: 'lodging', city: 'FRA', name: 'STAYERY Frankfurt Sachsenhausen', address: '', lat: null, lng: null, checkIn: '2027-01-12', checkOut: '2027-01-14', status: 'booked', ref: '', note: '已訂。紅眼班機早上抵達，先詢問飯店能否提早寄放行李。點上方搜尋「STAYERY Frankfurt」可帶入地址與地圖位置。' },
+  { id: 'l_muc', kind: 'lodging', city: 'MUC', name: 'INNSiDE München Parkstadt Schwabing', address: 'Mies-van-der-Rohe-Straße 10, 80807 München, 德國', lat: 48.1786, lng: 11.5879, checkIn: '2027-01-14', checkOut: '2027-01-17', status: 'paid', ref: '2606409219', note: 'The INNSiDE Room，1 房 2 人，已預付 €557.07（含 2,000 積分折抵）。入住 15:00 起、退房 12:00 前。位於市中心北邊的 Schwabing，搭 U6 到瑪利亞廣場約 15 分。' },
+  { id: 'l_prg', kind: 'lodging', city: 'PRG', name: '布拉格住宿（未訂）', address: '', lat: null, lng: null, checkIn: '2027-01-17', checkOut: '2027-01-22', status: 'todo', ref: '', note: '共 5 晚。1/22 早上 10:30 的班機，前往機場約 45 分。建議住舊城區（Staré Město）或新城區（Nové Město）靠近共和國廣場，步行可到逛街區與查理大橋。' },
 
   // ---------- 每日 ----------
   { id: 'd0111', kind: 'day', date: '2027-01-11', city: 'TPE', title: '出發', note: '桃園 T1 報到。華航提醒：1/10 前預訂餐點。', lodgingId: null, tags: [] },
@@ -40,9 +50,10 @@ export const seedItems = [
   { id: 'd0117', kind: 'day', date: '2027-01-17', city: 'PRG', title: '前往布拉格', note: '德國週日商店幾乎全關，剛好用來移動。布拉格週日商店大多照常營業。', lodgingId: 'l_prg', tags: ['移動', '週日'] },
   { id: 'd0118', kind: 'day', date: '2027-01-18', city: 'PRG', title: '城堡區・查理大橋', note: '布拉格部分博物館與美術館週一休館。', lodgingId: 'l_prg', tags: [] },
   { id: 'd0119', kind: 'day', date: '2027-01-19', city: 'PRG', title: '舊城・逛街日', note: '', lodgingId: 'l_prg', tags: [] },
-  { id: 'd0120', kind: 'day', date: '2027-01-20', city: 'PRG', title: '自由日・伴手禮', note: '最後一晚，伴手禮與退稅單據整理好。', lodgingId: 'l_prg', tags: [] },
-  { id: 'd0121', kind: 'day', date: '2027-01-21', city: 'PRG', title: '回程', note: '回程航班待補。退稅需在最後離開歐盟的機場辦理。', lodgingId: null, tags: ['移動'] },
-  { id: 'd0122', kind: 'day', date: '2027-01-22', city: 'TPE', title: '抵達台灣', note: '早上抵達桃園。', lodgingId: null, tags: [] },
+  { id: 'd0120', kind: 'day', date: '2027-01-20', city: 'PRG', title: '自由日・伴手禮', note: '', lodgingId: 'l_prg', tags: [] },
+  { id: 'd0121', kind: 'day', date: '2027-01-21', city: 'PRG', title: '最後一天・慢活', note: '最後一晚：伴手禮裝箱、退稅單據與護照放一起，隔天早上 7 點出發去機場。', lodgingId: 'l_prg', tags: [] },
+  { id: 'd0122', kind: 'day', date: '2027-01-22', city: 'PRG', title: '回程', note: 'CI 068 10:30 起飛。退稅要在托運行李前先到海關蓋章，建議 07:30 前抵達機場。', lodgingId: null, tags: ['移動'] },
+  { id: 'd0123', kind: 'day', date: '2027-01-23', city: 'TPE', title: '抵達台灣', note: '05:25 抵達桃園 T1。', lodgingId: null, tags: [] },
 
   // ---------- 景點：法蘭克福 ----------
   { id: 's_fair1', kind: 'stop', dayId: 'd0112', order: 0, name: 'Heimtextil 展覽（首日）', nameLocal: 'Messe Frankfurt', address: 'Ludwig-Erhard-Anlage 1, 60327 Frankfurt am Main, 德國', lat: 50.1118, lng: 8.6467, category: 'exhibition', outdoor: false, time: '13:30', duration: 240, note: '展期 1/12–1/15。展覽門票通常含 RMV 大眾運輸，購票時確認。', ticketUrl: 'https://heimtextil.messefrankfurt.com/' },
@@ -89,10 +100,14 @@ export const seedItems = [
   { id: 's_manufaktura', kind: 'stop', dayId: 'd0120', order: 3, name: 'Manufaktura', nameLocal: 'Manufaktura', address: 'Melantrichova 17, 110 00 Praha 1, 捷克', lat: 50.0858, lng: 14.4207, category: 'shopping', outdoor: false, time: '17:00', duration: 45, note: '啤酒與溫泉系列保養品。' },
   { id: 's_moser', kind: 'stop', dayId: 'd0120', order: 4, name: 'Moser 波希米亞水晶', nameLocal: 'Moser', address: 'Na Příkopě 12, 110 00 Praha 1, 捷克', lat: 50.0851, lng: 14.4243, category: 'shopping', outdoor: false, time: '17:50', duration: 40, note: '易碎品記得請店家加強包裝。' },
 
+  { id: 's_kampa', kind: 'stop', dayId: 'd0121', order: 0, name: '列儂牆・坎帕島', nameLocal: 'Lennonova zeď / Kampa', address: 'Velkopřevorské náměstí, 118 00 Praha 1, 捷克', lat: 50.0863, lng: 14.4068, category: 'landmark', outdoor: true, time: '11:00', duration: 90, note: '查理大橋下的小島，河岸散步很安靜。' },
+  { id: 's_louvre', kind: 'stop', dayId: 'd0121', order: 1, name: 'Café Louvre', nameLocal: 'Grand Café Louvre', address: 'Národní 22, 110 00 Praha 1, 捷克', lat: 50.0819, lng: 14.4189, category: 'cafe', outdoor: false, time: '14:30', duration: 75, note: '1902 年開業的老咖啡館，可以在這裡整理退稅單據。' },
+  { id: 's_farewell', kind: 'stop', dayId: 'd0121', order: 2, name: '告別晚餐', nameLocal: 'U Fleků', address: 'Křemencova 11, 110 00 Praha 1, 捷克', lat: 50.0790, lng: 14.4176, category: 'food', outdoor: false, time: '18:30', duration: 90, note: '1499 年開業的啤酒屋，自釀黑啤酒。早點回飯店打包。' },
+
   // ---------- 交通段 ----------
   {
     id: 'g_out', kind: 'leg', dayId: 'd0111', order: 0, mode: 'flight', from: '台北桃園 T1', to: '法蘭克福 FRA T3', dep: '23:30', arr: '07:30 +1', duration: 900,
-    operator: '中華航空', number: 'CI 061', note: '1/10 前預訂餐點，並開始預約自動報到。',
+    operator: '中華航空', number: 'CI 061', note: '15 小時直飛。1/10 前預訂餐點，並開始預約自動報到。',
     links: [{ label: '華航官網', url: 'https://www.china-airlines.com/' }]
   },
   {
@@ -111,8 +126,13 @@ export const seedItems = [
     links: [{ label: 'DB 訂票', url: DB }]
   },
   {
-    id: 'g_muc_day', kind: 'leg', dayId: 'd0115', order: 0, mode: 'sbahn', from: '飯店', to: '市中心', dep: '', arr: '', duration: null,
-    operator: 'MVV', number: '團體一日票', note: '2 人同行買 Gruppen-TagesTicket 比單人票划算，市中心大多可步行。',
+    id: 'g_muc_arr', kind: 'leg', dayId: 'd0114', order: 1, mode: 'sbahn', from: '慕尼黑中央車站', to: 'INNSiDE Parkstadt Schwabing', dep: '17:40', arr: '18:10', duration: 30, operator: 'MVV',
+    number: 'S-Bahn → Marienplatz 轉 U6', note: 'S-Bahn 任一線到 Marienplatz，轉 U6 往 Garching 方向到 Alte Heide 站，步行約 8 分。行李多的話搭計程車約 20 分。',
+    links: [{ label: 'MVV 車票', url: MVV }]
+  },
+  {
+    id: 'g_muc_day', kind: 'leg', dayId: 'd0115', order: 0, mode: 'sbahn', from: 'INNSiDE（Alte Heide 站）', to: 'Marienplatz', dep: '', arr: '', duration: null,
+    operator: 'MVV', number: 'U6 + 團體一日票', note: '從飯店走到 U6 Alte Heide 站，約 12 分到 Marienplatz。2 人同行買 Gruppen-TagesTicket 比單人票划算。',
     links: [{ label: 'MVV 車票', url: MVV }]
   },
   {
@@ -132,29 +152,30 @@ export const seedItems = [
   },
   {
     id: 'g_pid', kind: 'leg', dayId: 'd0117', order: 1, mode: 'sbahn', from: '布拉格中央車站', to: '飯店', dep: '', arr: '', duration: null,
-    operator: 'PID', number: '72 小時票', note: '在 PID Lítačka App 買 72 小時票，涵蓋地鐵、電車、公車，可用到 1/20。',
+    operator: 'PID', number: '72 小時票', note: '在 PID Lítačka App 買 72 小時票（1/17–1/20），1/21 起再買 24 小時票或單程票。涵蓋地鐵、電車、公車。',
     links: [{ label: 'PID 車票', url: PID }]
   },
   {
-    id: 'g_prg_air', kind: 'leg', dayId: 'd0121', order: 0, mode: 'bus', from: '飯店', to: '布拉格機場 PRG', dep: '', arr: '', duration: 45,
+    id: 'g_prg_air', kind: 'leg', dayId: 'd0122', order: 0, mode: 'bus', from: '飯店', to: '布拉格機場 PRG T1', dep: '06:50', arr: '07:35', duration: 45,
     operator: 'PID', number: '地鐵 A + 公車 119 / Airport Express', note: '地鐵 A 線到 Nádraží Veleslavín 轉 119 號公車；或從中央車站搭 Airport Express。',
     links: [{ label: 'PID 車票', url: PID }]
   },
   {
-    id: 'g_return', kind: 'leg', dayId: 'd0121', order: 1, mode: 'flight', from: '布拉格 PRG', to: '台北桃園', dep: '', arr: '1/22 早上', duration: null,
-    operator: '待補', number: '回程航班待補', note: '華航沒有布拉格航點，可能經法蘭克福或維也納轉機。退稅在最後離開歐盟的機場辦理。',
-    links: []
+    id: 'g_return', kind: 'leg', dayId: 'd0122', order: 1, mode: 'flight', from: '布拉格 PRG T1', to: '台北桃園 T1', dep: '10:30', arr: '05:25 +1', duration: 775,
+    operator: '中華航空', number: 'CI 068', note: '直飛回台。布拉格是最後離開歐盟的機場：德國和捷克的退稅單都在這裡蓋海關章，請在托運行李前先辦。',
+    links: [{ label: '華航官網', url: 'https://www.china-airlines.com/' }]
   },
 
   // ---------- 訂票與準備 ----------
   { id: 'b_meal', kind: 'booking', cat: 'flight', title: 'CI 061 預訂餐點', date: '2027-01-11', due: '2027-01-10', status: 'todo', price: '', currency: 'TWD', ref: '', url: 'https://www.china-airlines.com/', note: '華航 App 提醒' },
   { id: 'b_seat', kind: 'booking', cat: 'flight', title: 'CI 061 選位', date: '2027-01-11', due: '2027-01-10', status: 'todo', price: '', currency: 'TWD', ref: '', url: 'https://www.china-airlines.com/', note: '' },
   { id: 'b_checkin', kind: 'booking', cat: 'flight', title: 'CI 061 預約自動報到', date: '2027-01-11', due: '2027-01-10', status: 'todo', price: '', currency: 'TWD', ref: '', url: 'https://www.china-airlines.com/', note: '' },
-  { id: 'b_return', kind: 'booking', cat: 'flight', title: '回程航班（布拉格 → 台北）', date: '2027-01-21', due: '', status: 'booked', price: '', currency: 'TWD', ref: '', url: '', note: '請補上航班號碼與時間' },
+  { id: 'b_return', kind: 'booking', cat: 'flight', title: 'CI 068 回程（布拉格 → 台北）', date: '2027-01-22', due: '', status: 'booked', price: '', currency: 'TWD', ref: '', url: 'https://www.china-airlines.com/', note: '1/22 10:30 PRG T1 → 1/23 05:25 TPE T1' },
+  { id: 'b_return_meal', kind: 'booking', cat: 'flight', title: 'CI 068 預訂餐點・選位', date: '2027-01-22', due: '2027-01-20', status: 'todo', price: '', currency: 'TWD', ref: '', url: 'https://www.china-airlines.com/', note: '' },
   { id: 'b_heimtextil', kind: 'booking', cat: 'ticket', title: 'Heimtextil 門票（2 人）', date: '2027-01-12', due: '2026-12-31', status: 'todo', price: '', currency: 'EUR', ref: '', url: 'https://heimtextil.messefrankfurt.com/', note: '線上購票比現場便宜，確認是否含 RMV 交通。' },
-  { id: 'b_l_fra', kind: 'booking', cat: 'lodging', title: '法蘭克福住宿 1/12–1/14', date: '2027-01-12', due: '', status: 'booked', price: '', currency: 'EUR', ref: '', url: '', note: '', lodgingId: 'l_fra' },
-  { id: 'b_l_muc', kind: 'booking', cat: 'lodging', title: '慕尼黑住宿 1/14–1/17', date: '2027-01-14', due: '', status: 'booked', price: '', currency: 'EUR', ref: '', url: '', note: '', lodgingId: 'l_muc' },
-  { id: 'b_l_prg', kind: 'booking', cat: 'lodging', title: '布拉格住宿 1/17–1/21', date: '2027-01-17', due: '2026-12-15', status: 'todo', price: '', currency: 'CZK', ref: '', url: '', note: '建議舊城區或新城區', lodgingId: 'l_prg' },
+  { id: 'b_l_fra', kind: 'booking', cat: 'lodging', title: 'STAYERY Frankfurt Sachsenhausen 1/12–1/14', date: '2027-01-12', due: '', status: 'booked', price: '', currency: 'EUR', ref: '', url: '', note: '', lodgingId: 'l_fra' },
+  { id: 'b_l_muc', kind: 'booking', cat: 'lodging', title: 'INNSiDE München Parkstadt Schwabing 1/14–1/17', date: '2027-01-14', due: '', status: 'paid', price: 557.07, currency: 'EUR', ref: '2606409219', url: '', note: '已預付（Pre-paid BLACK FRIDAY），另用 2,000 積分。', lodgingId: 'l_muc' },
+  { id: 'b_l_prg', kind: 'booking', cat: 'lodging', title: '布拉格住宿 1/17–1/22（5 晚）', date: '2027-01-17', due: '2026-12-15', status: 'todo', price: '', currency: 'CZK', ref: '', url: '', note: '建議舊城區或新城區', lodgingId: 'l_prg' },
   { id: 'b_ice', kind: 'booking', cat: 'transport', title: 'ICE 法蘭克福 → 慕尼黑（1/14）', date: '2027-01-14', due: '2026-12-10', status: 'todo', price: '', currency: 'EUR', ref: '', url: DB, note: 'Sparpreis 越早越便宜，加訂座位。' },
   { id: 'b_neusch', kind: 'booking', cat: 'ticket', title: '新天鵝堡導覽門票（方案 A）', date: '2027-01-16', due: '2026-12-27', status: 'todo', price: '', currency: 'EUR', ref: '', url: 'https://www.hohenschwangau.de/en', note: '冬季名額少，出發前 2–4 週預訂。若最後選方案 B 可取消。', plan: 'A' },
   { id: 'b_bayern', kind: 'booking', cat: 'transport', title: 'Bayern-Ticket 2 人（1/16）', date: '2027-01-16', due: '2027-01-15', status: 'todo', price: '', currency: 'EUR', ref: '', url: DB, note: '方案 A、B 都適用，前一天在 DB Navigator 購買即可。' },
